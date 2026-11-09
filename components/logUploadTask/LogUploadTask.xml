@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="LogUploadTask" extends="task">
+    <interface>
+        <field id="request" type="assocarray"/>
+        <field id="response" type="assocarray" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/source/utils.brs"/>
+    <script type="text/brightscript" uri="LogUploadTask.brs"/>
+</component>
