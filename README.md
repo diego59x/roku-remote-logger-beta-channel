@@ -80,6 +80,14 @@ npm run build
 
 The build compiles `src/` and `sample/` with BrighterScript (`bsc`) into one package and writes it to `out/channel.zip`. Sideload that zip through the device's developer installer (open `http://<device-ip>` in a browser with developer mode enabled).
 
+Lint and format (`bslint.json`, `bsfmt.json`):
+
+```bash
+npm run lint           # bslint, fails on errors
+npm run format         # rewrite .brs files in place
+npm run format:check   # fails if any .brs file is not formatted
+```
+
 ## Safety
 
 - **Do not log personal data.** No emails, user tokens, account identifiers or full request URLs that carry credentials.
