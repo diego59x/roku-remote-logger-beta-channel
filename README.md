@@ -60,23 +60,14 @@ If the host app already has a logger, do not add call sites. Write an adapter in
 
 ## Repository layout
 
-Current:
-
-```
-components/   proof-of-concept scene and upload Task
-source/       proof-of-concept entry point and helpers
-server/       Python log receiver
-```
-
-Target, from milestone M0:
-
 ```
 src/          the library (plain BrightScript)
 sample/       a channel that exercises the library on a device
-server/       log receiver and tools
-tests/        unit tests
+server/       log receiver
 docs/         these documents
 ```
+
+`tests/` and the build that combines `src/` and `sample/` into a sideloadable channel arrive in later M0 pull requests.
 
 ## Safety
 
