@@ -1,0 +1,9 @@
+{
+  "rootDir": ".",
+  "files": [
+    { "src": "src/**/*", "dest": "" },
+    { "src": "sample/**/*", "dest": "" }
+  ],
+  "createPackage": true,
+  "outFile": "out/channel.zip"
+}

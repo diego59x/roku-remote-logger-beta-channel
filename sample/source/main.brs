@@ -11,12 +11,12 @@ sub Main()
     m.scene.observeField("exitApp", m.port)
 
 
-    while(true)
+    while true
         msg = wait(0, m.port)
         msgType = type(msg)
-        if msgType = "roSGScreenEvent" then
+        if msgType = "roSGScreenEvent"
             field = msg.getField()
-            if field = "exitApp" then
+            if field = "exitApp"
                 return
             end if
         end if

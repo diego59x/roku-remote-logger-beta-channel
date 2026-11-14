@@ -1,0 +1,10 @@
+{
+    "plugins": ["@rokucommunity/bslint"],
+    "files": [
+        { "src": "src/**/*", "dest": "" },
+        { "src": "sample/**/*", "dest": "" }
+    ],
+    "rules": {
+        "named-function-style": "auto"
+    }
+}

@@ -67,7 +67,26 @@ server/       log receiver
 docs/         these documents
 ```
 
-`tests/` and the build that combines `src/` and `sample/` into a sideloadable channel arrive in later M0 pull requests.
+The build (below) combines `src/` and `sample/` into one sideloadable channel. `tests/` arrives in a later M0 pull request.
+
+## Build
+
+Requires Node.js (tested with v22.22.1).
+
+```bash
+npm ci
+npm run build
+```
+
+The build compiles `src/` and `sample/` with BrighterScript (`bsc`) into one package and writes it to `out/channel.zip`. Sideload that zip through the device's developer installer (open `http://<device-ip>` in a browser with developer mode enabled).
+
+Lint and format (`bslint.json`, `bsfmt.json`):
+
+```bash
+npm run lint           # bslint, fails on errors
+npm run format         # rewrite .brs files in place
+npm run format:check   # fails if any .brs file is not formatted
+```
 
 ## Safety
 

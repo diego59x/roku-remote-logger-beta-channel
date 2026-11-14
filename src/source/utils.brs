@@ -1,11 +1,11 @@
-sub TypeGuard_isAssocArray(value as dynamic) as boolean
+function TypeGuard_isAssocArray(value as dynamic) as boolean
     return type(value) = "roAssociativeArray"
-end sub
+end function
 
-sub TypeGuard_isStringNotEmpty(value as dynamic) as boolean
+function TypeGuard_isStringNotEmpty(value as dynamic) as boolean
     return type(value) = "string" and len(value) > 0
-end sub
+end function
 
-sub TypeGuard_isString(value as dynamic) as boolean
+function TypeGuard_isString(value as dynamic) as boolean
     return type(value) = "string"
-end sub
+end function
