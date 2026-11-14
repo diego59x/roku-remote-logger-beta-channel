@@ -1,0 +1,11 @@
+namespace tests
+    @suite("RemoteLogger type guards")
+    class TypeGuardsTests extends rooibos.BaseTestSuite
+        @describe("associative arrays")
+        @it("recognizes associative arrays")
+        sub recognizesAssociativeArrays()
+            m.assertTrue(RemoteLogger_isAssocArray({}))
+            m.assertFalse(RemoteLogger_isAssocArray(invalid))
+        end sub
+    end class
+end namespace
