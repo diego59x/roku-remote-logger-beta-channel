@@ -1,0 +1,10 @@
+{
+    "indentStyle": "spaces",
+    "indentSpaceCount": 4,
+    "keywordCase": "lower",
+    "compositeKeywords": "split",
+    "files": [
+        "src/**/*.brs",
+        "sample/**/*.brs"
+    ]
+}
