@@ -5,6 +5,7 @@
     "compositeKeywords": "split",
     "files": [
         "src/**/*.brs",
-        "sample/**/*.brs"
+        "sample/**/*.brs",
+        "tests/**/*.bs"
     ]
 }

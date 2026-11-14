@@ -1,4 +1,4 @@
-# roku-remote-logger
+# RemoteLogger
 
 A BrightScript/SceneGraph library that ships logs from a running Roku channel to a log server in near real time.
 
@@ -67,7 +67,7 @@ server/       log receiver
 docs/         these documents
 ```
 
-The build (below) combines `src/` and `sample/` into one sideloadable channel. `tests/` arrives in a later M0 pull request.
+The production build combines `src/` and `sample/` into one sideloadable channel. Rooibos tests live in `tests/` and use a separate build configuration.
 
 ## Build
 
@@ -84,9 +84,17 @@ Lint and format (`bslint.json`, `bsfmt.json`):
 
 ```bash
 npm run lint           # bslint, fails on errors
-npm run format         # rewrite .brs files in place
-npm run format:check   # fails if any .brs file is not formatted
+npm run format         # rewrite .brs and .bs files in place
+npm run format:check   # fails if any .brs or .bs file is not formatted
 ```
+
+Run the unit-test build:
+
+```bash
+npm test
+```
+
+This compiles the Rooibos test suite for CI. To execute it on a Roku device, configure `ROKU_HOST` (and `ROKU_PASSWORD` if needed), then run `npm run test:device`. For a Roku Cloud Emulator, set `ROKU_RCE_TOKEN` and pass either `--esn <ESN>` or `--instance-url <URL>` to the script.
 
 ## Safety
 

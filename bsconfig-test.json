@@ -1,0 +1,14 @@
+{
+  "rootDir": ".",
+  "files": [
+    { "src": "src/**/*", "dest": "" },
+    { "src": "sample/**/*", "dest": "" },
+    { "src": "tests/**/*", "dest": "" }
+  ],
+  "createPackage": true,
+  "outFile": "out/channel-tests.zip",
+  "plugins": ["rooibos-roku"],
+  "rooibos": {
+    "showOnlyFailures": true
+  }
+}
