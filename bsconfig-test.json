@@ -8,6 +8,9 @@
   "createPackage": true,
   "outFile": "out/channel-tests.zip",
   "plugins": ["rooibos-roku"],
+  "diagnosticFilters": [
+    { "src": "tests/**/*.spec.bs", "codes": [1013] }
+  ],
   "rooibos": {
     "showOnlyFailures": true
   }

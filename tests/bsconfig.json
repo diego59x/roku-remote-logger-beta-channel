@@ -1,0 +1,5 @@
+{
+  "extends": "../bsconfig-test.json",
+  "outFile": "../out/channel-tests-editor.zip",
+  "stagingDir": "../out/.test-editor-staging"
+}
