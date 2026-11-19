@@ -20,9 +20,10 @@ The library is a handful of plain `.brs` files and one Task component, with no d
 | `ropm` *(from M2)* | `ropm install roku-remote-logger`. Function and component names get the `ropm` prefix. |
 | Git submodule | Add this repository as a submodule and include `src/` in the build's file list. |
 
-Each component that logs must include the facade script in its XML:
+Each component that logs must include the facade script and the helpers it calls in its XML:
 
 ```xml
+<script type="text/brightscript" uri="pkg:/source/utils.brs" />
 <script type="text/brightscript" uri="pkg:/source/RemoteLogger.brs" />
 ```
 
@@ -184,6 +185,8 @@ The translation is a lookup in the adapter, a few lines per app. Three schemes c
 An unknown level name is sent as `info`, so a mapping mistake shows up in the output and loses nothing.
 
 **Data can be any type.** Host loggers pass an object, an array, a string, a number or `invalid` as the extra argument. The adapter hands it over unchanged; the library accepts all of them and serialises what it can.
+
+**Quote camelCase keys in data literals.** BrightScript stores unquoted keys of an AA literal in lower case, so `{ uptimeSec: 5 }` reaches the server as `uptimesec`. Write `{ "uptimeSec": 5 }` to keep the case.
 
 There are then **two filters in a row**, and an entry must pass both:
 
