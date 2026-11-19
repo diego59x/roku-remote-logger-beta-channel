@@ -76,16 +76,63 @@ namespace tests
             m.assertInvalid(body.entries[1].truncated)
         end sub
 
-        @it("sends an entry whose data cannot be serialised without data, and keeps the rest")
-        sub dropsBadData()
+        @it("replaces data that cannot be serialised, flags it, and keeps the rest")
+        sub replacesBadData()
             bad = m.entry(2, "bad", { node: CreateObject("roSGNode", "Node") })
             body = ParseJson(RemoteLogger_buildBody(m.session(), [m.entry(1, "a", { k: 1 }), bad, m.entry(3, "c")], 0))
             m.assertEqual(body.entries.count(), 3)
             m.assertEqual(body.entries[0].data, { k: 1 })
+            m.assertInvalid(body.entries[0].truncated)
             m.assertEqual(body.entries[1].msg, "bad")
-            m.assertFalse(body.entries[1].doesExist("data"))
+            m.assertEqual(body.entries[1].data, { node: "<roSGNode:Node>" })
             m.assertTrue(body.entries[1].truncated)
             m.assertEqual(body.entries[2].seq, 3)
+        end sub
+
+        @describe("safeData")
+        @it("replaces a node inside an AA and inside an array")
+        sub safeDataReplacesNodes()
+            node = CreateObject("roSGNode", "Group")
+            state = { truncated: false, scalars: RemoteLogger_jsonScalarTypes() }
+            m.assertEqual(RemoteLogger_safeData({ a: 1, n: node }, 1, state), { a: 1, n: "<roSGNode:Group>" })
+            m.assertTrue(state.truncated)
+            state = { truncated: false, scalars: RemoteLogger_jsonScalarTypes() }
+            m.assertEqual(RemoteLogger_safeData([1, node, "x"], 1, state), [1, "<roSGNode:Group>", "x"])
+            m.assertTrue(state.truncated)
+        end sub
+
+        @it("cuts nesting deeper than 8")
+        sub safeDataCutsDepth()
+            deep = { v: 1 }
+            for i = 1 to 9
+                deep = { next: deep }
+            end for
+            state = { truncated: false, scalars: RemoteLogger_jsonScalarTypes() }
+            safe = RemoteLogger_safeData(deep, 1, state)
+            m.assertTrue(state.truncated)
+            for i = 1 to 7
+                safe = safe.next
+            end for
+            m.assertEqual(safe.next, "<depth>")
+        end sub
+
+        @it("keeps plain data unchanged and unflagged")
+        sub safeDataKeepsPlainData()
+            data = { s: "x", i: 1, l: 2&, f: 1.5, d: 2.5#, b: true, n: invalid, list: [1, { k: "v" }] }
+            state = { truncated: false, scalars: RemoteLogger_jsonScalarTypes() }
+            m.assertEqual(RemoteLogger_safeData(data, 1, state), data)
+            m.assertFalse(state.truncated)
+            body = ParseJson(RemoteLogger_buildBody(m.session(), [m.entry(1, "a", data)], 0))
+            m.assertInvalid(body.entries[0].truncated)
+        end sub
+
+        @it("does not change the caller's object")
+        sub safeDataCopies()
+            node = CreateObject("roSGNode", "Node")
+            data = { n: node, list: [node] }
+            RemoteLogger_buildBody(m.session(), [m.entry(1, "a", data)], 0)
+            m.assertTrue(node.isSameNode(data.n))
+            m.assertTrue(node.isSameNode(data.list[0]))
         end sub
 
         @describe("resequence")

@@ -56,7 +56,7 @@ One request carries one batch from one session.
 | `entries[].tag` | string | yes | Name given to the facade, usually the component |
 | `entries[].msg` | string | yes | The message |
 | `entries[].data` | object | no | Structured data passed with the call |
-| `entries[].truncated` | boolean | no | Present and `true` when the message was cut or the data was removed |
+| `entries[].truncated` | boolean | no | Present and `true` when the message was cut, or part or all of the data was replaced or removed |
 
 The session object is sent with every batch, so the server keeps no state and a batch can be read alone.
 
