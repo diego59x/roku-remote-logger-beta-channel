@@ -158,6 +158,8 @@ class LogHandler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", ""))
         except ValueError:
             return self.reply(400, "Content-Length required")
+        if length < 0:
+            return self.reply(400, "Content-Length required")
         if length > MAX_BODY:
             self.close_connection = True  # the unread body stays on the socket
             return self.reply(413, "body larger than %d bytes" % MAX_BODY)

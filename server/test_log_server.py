@@ -111,6 +111,12 @@ class LogServerTest(unittest.TestCase):
                       b"Content-Length: %d\r\n\r\n" % (MAX_BODY + 1))
             self.assertTrue(s.recv(1024).startswith(b"HTTP/1.0 413"))
 
+    def test_negative_length_refused(self):
+        # read(-1) would read to EOF with no cap, so a negative length must be refused up front.
+        with socket.create_connection(("127.0.0.1", self.port), timeout=5) as s:
+            s.sendall(b"POST /v1/logs HTTP/1.1\r\nHost: x\r\nContent-Length: -1\r\n\r\n")
+            self.assertTrue(s.recv(1024).startswith(b"HTTP/1.0 400"))
+
     def test_duplicate_batch_written_once(self):
         self.request("POST", "/v1/logs", batch("dup1", [1, 2, 3]))
         status, _, console = self.request("POST", "/v1/logs", batch("dup1", [2, 3, 4]))
