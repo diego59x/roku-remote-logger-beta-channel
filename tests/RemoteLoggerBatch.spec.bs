@@ -1,0 +1,140 @@
+namespace tests
+    @suite("RemoteLogger batch")
+    class RemoteLoggerBatchTests extends rooibos.BaseTestSuite
+        function entry(seq as integer, msg as string, data = invalid as dynamic) as object
+            return { seq: seq, t: 1794480012345&, lvl: "info", tag: "Test", msg: msg, data: data }
+        end function
+
+        function session() as object
+            return {
+                id: "9f1c2e7a",
+                startedAt: 1794480000000&,
+                app: { id: "dev", version: "0.1.0", build: "0" },
+                device: { model: "4802X", os: "15.0.4", locale: "en_US" },
+                tags: {}
+            }
+        end function
+
+        @describe("sessionEnvelope")
+        @it("has the required keys and no serial or advertising id")
+        sub envelopeKeys()
+            s = RemoteLogger_sessionEnvelope({ sessionTags: { tester: "qa-01" } })
+            m.assertTrue(Len(s.id) >= 8)
+            m.assertTrue(CreateObject("roRegex", "^[0-9a-fA-F]+$", "").isMatch(s.id))
+            m.assertEqual(type(s.startedAt), "LongInteger")
+            m.assertTrue(s.startedAt > 0)
+            m.assertAAHasKeys(s.app, ["id", "version", "build"])
+            m.assertAAHasKeys(s.device, ["model", "os", "locale"])
+            m.assertTrue(CreateObject("roRegex", "^\d+\.\d+\.\d+$", "").isMatch(s.device.os))
+            m.assertEqual(s.tags, { tester: "qa-01" })
+            ' AA lookups ignore case, so check the wire form: unquoted literal keys are lowercased.
+            m.assertTrue(Instr(1, FormatJson(s), """startedAt"":") > 0)
+            json = LCase(FormatJson(s))
+            m.assertEqual(Instr(1, json, "serial"), 0)
+            m.assertEqual(Instr(1, json, "advertising"), 0)
+            m.assertEqual(Instr(1, json, "rida"), 0)
+        end sub
+
+        @it("gives a new id each time")
+        sub envelopeIdIsRandom()
+            m.assertNotEqual(RemoteLogger_sessionEnvelope({ sessionTags: {} }).id, RemoteLogger_sessionEnvelope({ sessionTags: {} }).id)
+        end sub
+
+        @describe("buildBody")
+        @it("parses back to the protocol shape")
+        sub bodyShape()
+            body = ParseJson(RemoteLogger_buildBody(m.session(), [m.entry(1, "a", { state: "playing" }), m.entry(2, "b")], 3))
+            m.assertEqual(body.v, 1)
+            m.assertEqual(body.dropped, 3)
+            m.assertEqual(body.session.id, "9f1c2e7a")
+            m.assertEqual(body.session.device.os, "15.0.4")
+            m.assertEqual(body.entries.count(), 2)
+            first = body.entries[0]
+            m.assertEqual(first.seq, 1)
+            m.assertEqual(first.t, 1794480012345&)
+            m.assertEqual(first.lvl, "info")
+            m.assertEqual(first.tag, "Test")
+            m.assertEqual(first.msg, "a")
+            m.assertEqual(first.data, { state: "playing" })
+            m.assertInvalid(first.truncated)
+            m.assertFalse(body.entries[1].doesExist("data"))
+        end sub
+
+        @it("parses with no entries")
+        sub emptyBody()
+            body = ParseJson(RemoteLogger_buildBody(m.session(), [], 0))
+            m.assertEqual(body.entries, [])
+        end sub
+
+        @it("truncates a long message and flags it")
+        sub truncatesLongMessage()
+            long = string(4001, "x")
+            body = ParseJson(RemoteLogger_buildBody(m.session(), [m.entry(1, long), m.entry(2, string(4000, "y"))], 0))
+            m.assertEqual(Len(body.entries[0].msg), 4000)
+            m.assertTrue(body.entries[0].truncated)
+            m.assertEqual(Len(body.entries[1].msg), 4000)
+            m.assertInvalid(body.entries[1].truncated)
+        end sub
+
+        @it("sends an entry whose data cannot be serialised without data, and keeps the rest")
+        sub dropsBadData()
+            bad = m.entry(2, "bad", { node: CreateObject("roSGNode", "Node") })
+            body = ParseJson(RemoteLogger_buildBody(m.session(), [m.entry(1, "a", { k: 1 }), bad, m.entry(3, "c")], 0))
+            m.assertEqual(body.entries.count(), 3)
+            m.assertEqual(body.entries[0].data, { k: 1 })
+            m.assertEqual(body.entries[1].msg, "bad")
+            m.assertFalse(body.entries[1].doesExist("data"))
+            m.assertTrue(body.entries[1].truncated)
+            m.assertEqual(body.entries[2].seq, 3)
+        end sub
+
+        @describe("resequence")
+        @it("numbers entries from nextSeq and returns the next value")
+        sub resequences()
+            entries = [m.entry(1, "a"), m.entry(1, "b"), m.entry(2, "c")]
+            m.assertEqual(RemoteLogger_resequence(entries, 10), 13)
+            m.assertEqual(entries[0].seq, 10)
+            m.assertEqual(entries[1].seq, 11)
+            m.assertEqual(entries[2].seq, 12)
+            m.assertEqual(RemoteLogger_resequence([], 13), 13)
+        end sub
+
+        @describe("classifyStatus")
+        @it("maps 2xx to ok, 4xx to drop and the rest to retry")
+        sub classifies()
+            m.assertEqual(RemoteLogger_classifyStatus(200), "ok")
+            m.assertEqual(RemoteLogger_classifyStatus(204), "ok")
+            m.assertEqual(RemoteLogger_classifyStatus(400), "drop")
+            m.assertEqual(RemoteLogger_classifyStatus(404), "drop")
+            m.assertEqual(RemoteLogger_classifyStatus(500), "retry")
+            m.assertEqual(RemoteLogger_classifyStatus(-28), "retry")
+            m.assertEqual(RemoteLogger_classifyStatus(0), "retry")
+        end sub
+
+        @describe("batchResult")
+        @it("retries 3 times with backoff, then drops")
+        sub retriesThenDrops()
+            batch = { retries: 0 }
+            m.assertEqual(RemoteLogger_batchResult(batch, 500, 0), "retry")
+            m.assertEqual(batch.due, 1000)
+            m.assertEqual(RemoteLogger_batchResult(batch, -28, 0), "retry")
+            m.assertEqual(batch.due, 2000)
+            m.assertEqual(RemoteLogger_batchResult(batch, 503, 0), "retry")
+            m.assertEqual(batch.due, 4000)
+            m.assertEqual(RemoteLogger_batchResult(batch, 500, 0), "drop")
+        end sub
+
+        @it("drops on 4xx and accepts on 2xx at once")
+        sub noRetryOnAnswer()
+            m.assertEqual(RemoteLogger_batchResult({ retries: 0 }, 400, 0), "drop")
+            m.assertEqual(RemoteLogger_batchResult({ retries: 2 }, 204, 0), "ok")
+        end sub
+
+        @it("caps the backoff at 30 s")
+        sub backoffCap()
+            m.assertEqual(RemoteLogger_backoffMs(5), 16000)
+            m.assertEqual(RemoteLogger_backoffMs(6), 30000)
+            m.assertEqual(RemoteLogger_backoffMs(20), 30000)
+        end sub
+    end class
+end namespace

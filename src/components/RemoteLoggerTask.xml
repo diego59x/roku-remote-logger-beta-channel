@@ -7,7 +7,9 @@
         <field id="cancel" type="boolean" />
         <field id="queued" type="integer" />
         <field id="dropped" type="integer" />
+        <field id="sent" type="integer" />
     </interface>
     <script type="text/brightscript" uri="pkg:/source/RemoteLoggerQueue.brs" />
+    <script type="text/brightscript" uri="pkg:/source/RemoteLoggerBatch.brs" />
     <script type="text/brightscript" uri="RemoteLoggerTask.brs" />
 </component>
