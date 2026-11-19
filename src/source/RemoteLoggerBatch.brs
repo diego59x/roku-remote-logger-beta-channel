@@ -84,7 +84,8 @@ end function
 function RemoteLogger_jsonScalarTypes() as object
     return {
         String: true, roString: true,
-        Integer: true, roInteger: true,
+        ' Both names occur on device: roInteger in the same thread, roInt after crossing a node field.
+        Integer: true, roInteger: true, roInt: true,
         LongInteger: true, roLongInteger: true,
         Float: true, roFloat: true,
         Double: true, roDouble: true,
