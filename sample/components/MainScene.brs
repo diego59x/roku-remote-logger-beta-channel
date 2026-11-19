@@ -19,7 +19,7 @@ sub onLaunchArgs()
     end if
 
     m.log = RemoteLogger("MainScene")
-    m.log.info("sample started", { remoteLogging: started })
+    m.log.info("sample started", { "remoteLogging": started })
 
     ticker = m.top.findNode("ticker")
     ticker.observeField("fire", "onTick")
@@ -32,6 +32,6 @@ end sub
 sub onTick()
     m.ticks = m.ticks + 1
     m.log.debug("tick", { count: m.ticks })
-    m.log.info("heartbeat", { count: m.ticks, uptimeSec: m.ticks * 5 })
+    m.log.info("heartbeat", { count: m.ticks, "uptimeSec": m.ticks * 5 })
     if m.ticks = 3 then m.log.error("simulated failure on third tick", { count: m.ticks })
 end sub

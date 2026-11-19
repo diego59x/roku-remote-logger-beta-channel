@@ -186,6 +186,8 @@ An unknown level name is sent as `info`, so a mapping mistake shows up in the ou
 
 **Data can be any type.** Host loggers pass an object, an array, a string, a number or `invalid` as the extra argument. The adapter hands it over unchanged; the library accepts all of them and serialises what it can.
 
+**Quote camelCase keys in data literals.** BrightScript stores unquoted keys of an AA literal in lower case, so `{ uptimeSec: 5 }` reaches the server as `uptimesec`. Write `{ "uptimeSec": 5 }` to keep the case.
+
 There are then **two filters in a row**, and an entry must pass both:
 
 1. The host logger's own level decides whether the adapter is called at all.
