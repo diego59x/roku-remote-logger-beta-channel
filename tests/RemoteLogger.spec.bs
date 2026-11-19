@@ -35,7 +35,9 @@ namespace tests
             m.sink = CreateObject("roSGNode", "Node")
             m.sink.addField("level", "string", false)
             m.sink.addField("entry", "assocarray", true)
+            m.sink.addField("ready", "boolean", false)
             m.sink.level = "info"
+            m.sink.ready = true
             m.global.addFields({ remoteLogger: m.sink })
         end sub
 
@@ -125,6 +127,86 @@ namespace tests
             m.sink.level = "error"
             logger.debug("still shown")
             m.assertEqual(m.sink.entry.lvl, "debug")
+        end sub
+
+        ' The sink keeps only the last written entry, so the order of the flush is checked
+        ' on logger.buffer just before it, and the write on the sink's last entry.
+        @describe("facade before the Task is ready")
+        @beforeEach
+        sub addSinkNotReady()
+            m.addSink()
+            m.sink.ready = false
+            ' A sentinel, because an unset assocarray field is not an AA on device.
+            m.sink.entry = { seq: 0, msg: "sentinel" }
+        end sub
+
+        @afterEach
+        sub removeSinkNotReady()
+            m.removeSink()
+        end sub
+
+        @it("buffers entries while the Task is not ready")
+        sub buffersUntilReady()
+            logger = RemoteLogger("Test")
+            m.assertFalse(logger.ready)
+            logger.info("one")
+            logger.debug("filtered")
+            logger.warn("two")
+            m.assertEqual(m.sink.entry.msg, "sentinel")
+            m.assertEqual(logger.buffer.count(), 2)
+            m.assertEqual(logger.buffer[0].seq, 1)
+            m.assertEqual(logger.buffer[0].msg, "one")
+            m.assertEqual(logger.buffer[1].seq, 2)
+            m.assertEqual(logger.buffer[1].msg, "two")
+        end sub
+
+        @it("writes the buffered entries, then the new one, once the Task is ready")
+        sub flushesWhenReady()
+            logger = RemoteLogger("Test")
+            logger.info("one")
+            logger.info("two")
+            m.sink.ready = true
+            logger.info("three")
+            m.assertTrue(logger.ready)
+            m.assertFalse(logger.doesExist("buffer"))
+            m.assertEqual(m.sink.entry.seq, 3)
+            m.assertEqual(m.sink.entry.msg, "three")
+        end sub
+
+        @it("stops reading ready once it has seen it true")
+        sub readsReadyUntilTrue()
+            logger = RemoteLogger("Test")
+            m.sink.ready = true
+            logger.info("one")
+            m.sink.ready = false
+            logger.info("two")
+            m.assertEqual(m.sink.entry.msg, "two")
+        end sub
+
+        @it("keeps the last 50 entries and counts the ones it drops")
+        sub capsBuffer()
+            logger = RemoteLogger("Test")
+            for i = 1 to 52
+                logger.info(i)
+            end for
+            m.assertEqual(logger.buffer.count(), 50)
+            m.assertEqual(logger.buffer[0].msg, "3")
+            m.assertEqual(logger.buffer[49].msg, "52")
+            m.assertEqual(logger.bufferedDropped, 2)
+            m.assertEqual(m.sink.entry.msg, "sentinel")
+        end sub
+
+        @it("writes directly when the Task is already ready at construction")
+        sub readyAtConstruction()
+            m.sink.ready = true
+            logger = RemoteLogger("Test")
+            m.assertTrue(logger.ready)
+            m.assertFalse(logger.doesExist("buffer"))
+            m.sink.ready = false ' never read again
+            logger.info("one")
+            m.assertEqual(m.sink.entry.seq, 1)
+            m.assertEqual(m.sink.entry.msg, "one")
+            m.assertEqual(logger.bufferedDropped, 0)
         end sub
     end class
 end namespace

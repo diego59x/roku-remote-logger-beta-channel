@@ -30,8 +30,9 @@ function RemoteLogger_buildBody(session as object, entries as object, dropped as
     return Left(head, Len(head) - 1) + ",""entries"":[" + parts.join(",") + "]}"
 end function
 
-' A long message is cut; data that FormatJson rejects (for example a node) is removed.
-' Both set truncated: true.
+' A long message is cut; values FormatJson cannot serialise (for example a node) are
+' replaced first, because FormatJson prints a console error on them. If it still fails,
+' the data is removed. Each sets truncated: true.
 function RemoteLogger_entryJson(entry as object) as string
     out = { seq: entry.seq, t: entry.t, lvl: entry.lvl, tag: entry.tag, msg: entry.msg }
     if Len(out.msg) > 4000
@@ -39,13 +40,57 @@ function RemoteLogger_entryJson(entry as object) as string
         out.truncated = true
     end if
     if entry.data <> invalid
-        out.data = entry.data
+        state = { truncated: false, scalars: RemoteLogger_jsonScalarTypes() }
+        out.data = RemoteLogger_safeData(entry.data, 1, state)
+        if state.truncated then out.truncated = true
         json = FormatJson(out)
         if json <> "" then return json
         out.delete("data")
         out.truncated = true
     end if
     return FormatJson(out)
+end function
+
+' A copy of value that FormatJson accepts; value itself is not changed. An unsupported
+' value becomes "<type>" ("<roSGNode:subtype>" for a node) and an AA or array nested
+' deeper than 8 becomes "<depth>"; either sets state.truncated.
+function RemoteLogger_safeData(value as dynamic, depth as integer, state as object) as dynamic
+    kind = type(value)
+    if kind = "roAssociativeArray" or kind = "roArray"
+        if depth > 8
+            state.truncated = true
+            return "<depth>"
+        end if
+        if kind = "roArray"
+            copy = []
+            for each item in value
+                copy.push(RemoteLogger_safeData(item, depth + 1, state))
+            end for
+        else
+            copy = {}
+            for each key in value
+                copy[key] = RemoteLogger_safeData(value[key], depth + 1, state)
+            end for
+        end if
+        return copy
+    end if
+    if state.scalars.doesExist(kind) then return value
+    state.truncated = true
+    if kind = "roSGNode" then return "<roSGNode:" + value.subtype() + ">"
+    return "<" + kind + ">"
+end function
+
+' type() names of the scalars FormatJson serialises, intrinsic and boxed.
+function RemoteLogger_jsonScalarTypes() as object
+    return {
+        String: true, roString: true,
+        Integer: true, roInt: true,
+        LongInteger: true, roLongInteger: true,
+        Float: true, roFloat: true,
+        Double: true, roDouble: true,
+        Boolean: true, roBoolean: true,
+        Invalid: true, roInvalid: true
+    }
 end function
 
 ' The facade numbers entries per component; this gives them the session-wide seq.

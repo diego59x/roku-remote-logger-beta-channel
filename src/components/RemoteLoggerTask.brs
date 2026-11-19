@@ -10,6 +10,8 @@ sub RemoteLogger_taskRun()
     port = CreateObject("roMessagePort")
     m.top.observeField("entry", port)
     m.top.observeField("cancel", port)
+    ' Until now an entry write produced no event; facades buffer until they see this.
+    m.top.ready = true
     session = RemoteLogger_sessionEnvelope(config)
     clock = CreateObject("roTimespan")
 
