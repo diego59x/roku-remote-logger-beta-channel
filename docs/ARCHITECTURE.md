@@ -65,7 +65,7 @@ The Task loop reads its configuration once at start and keeps working state in l
 
 ### Log server
 
-Receives batches and makes them readable. Today it is one Python file using only the standard library; it prints each entry and appends it to a file. It stays that small on purpose: a later milestone adds one file per session with a JSON entry per line, and reading is left to `tail`, `grep` and `jq`. Any server that implements [the protocol](PROTOCOL.md) can replace it.
+Receives batches and makes them readable. Today it is one Python file using only the standard library; it prints each entry and writes one file per session with a JSON entry per line. It stays that small on purpose: reading is left to `tail`, `grep` and `jq`. Any server that implements [the protocol](PROTOCOL.md) can replace it.
 
 ## Threading model
 

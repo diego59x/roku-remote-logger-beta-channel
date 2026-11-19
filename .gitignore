@@ -1,3 +1,5 @@
 roku_logs.txt
 node_modules/
 out/
+server/logs/
+__pycache__/
