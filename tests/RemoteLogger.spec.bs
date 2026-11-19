@@ -50,7 +50,10 @@ namespace tests
             logger = RemoteLogger("Test")
             logger.debug("hidden")
             logger.trace("hidden")
-            m.assertEqual(m.sink.entry.count(), 0)
+            ' An unset assocarray field is not an AA on device, so prove "not written" through seq.
+            logger.info("shown")
+            m.assertEqual(m.sink.entry.seq, 1)
+            m.assertEqual(m.sink.entry.msg, "shown")
         end sub
 
         @it("writes entries at or above the level")
