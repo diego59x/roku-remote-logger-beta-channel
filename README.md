@@ -24,9 +24,11 @@ It exists for the builds where the debug console is out of reach: beta channels,
 1. Start the receiver on a machine the Roku can reach:
 
    ```bash
-   python3 server/LogLocalServer.py
-   # Log server listening on http://192.168.1.20:8085
+   python3 server/LogLocalServer.py                  # options: --port 8085 --log-dir server/logs
+   # Log server listening. Device endpoint: http://192.168.1.20:8085/v1/logs
    ```
+
+   Each session is written to its own file in `server/logs/`, one JSON entry per line: follow it with `tail -f server/logs/*.jsonl` and filter it with `jq`, for example `jq -c 'select(.lvl == "error")' server/logs/*.jsonl`.
 
 2. Initialise the library once, on the render thread, early in the scene's `init()`:
 
