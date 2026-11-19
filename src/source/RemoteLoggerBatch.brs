@@ -12,7 +12,7 @@ function RemoteLogger_sessionEnvelope(config as object) as object
     if FormatJson(tags) = "" then tags = {}
     return {
         id: device.getRandomUUID().replace("-", ""),
-        startedAt: clock.asSeconds() * 1000& + clock.getMilliseconds(),
+        "startedAt": clock.asSeconds() * 1000& + clock.getMilliseconds(),
         app: { id: app.getID(), version: app.getVersion(), build: app.getValue("build_version") },
         device: { model: device.getModel(), os: os.major + "." + os.minor + "." + os.revision, locale: device.getCurrentLocale() },
         tags: tags

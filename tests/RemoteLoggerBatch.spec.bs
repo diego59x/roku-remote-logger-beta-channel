@@ -27,6 +27,8 @@ namespace tests
             m.assertAAHasKeys(s.device, ["model", "os", "locale"])
             m.assertTrue(CreateObject("roRegex", "^\d+\.\d+\.\d+$", "").isMatch(s.device.os))
             m.assertEqual(s.tags, { tester: "qa-01" })
+            ' AA lookups ignore case, so check the wire form: unquoted literal keys are lowercased.
+            m.assertTrue(Instr(1, FormatJson(s), """startedAt"":") > 0)
             json = LCase(FormatJson(s))
             m.assertEqual(Instr(1, json, "serial"), 0)
             m.assertEqual(Instr(1, json, "advertising"), 0)
