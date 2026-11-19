@@ -1,16 +1,14 @@
 {
   "rootDir": ".",
   "files": [
+    { "src": "sample/manifest", "dest": "" },
     { "src": "src/**/*", "dest": "" },
-    { "src": "sample/**/*", "dest": "" },
-    { "src": "tests/**/*", "dest": "" }
+    { "src": "tests/**/*.bs", "dest": "source/tests" }
   ],
   "createPackage": true,
+  "stagingDir": "out/.test-staging",
   "outFile": "out/channel-tests.zip",
   "plugins": ["rooibos-roku"],
-  "diagnosticFilters": [
-    { "src": "tests/**/*.spec.bs", "codes": [1013] }
-  ],
   "rooibos": {
     "showOnlyFailures": true
   }
