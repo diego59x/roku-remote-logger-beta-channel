@@ -1,0 +1,118 @@
+namespace tests
+    @suite("RemoteLogger init")
+    class RemoteLoggerInitTests extends rooibos.BaseTestSuite
+        @describe("normalizeConfig")
+        @it("fills every key with its default")
+        sub fillsDefaults()
+            config = RemoteLogger_normalizeConfig({})
+            m.assertEqual(config, {
+                enabled: false,
+                endpoint: "",
+                level: "info",
+                batchSize: 20,
+                flushIntervalMs: 2000,
+                maxQueue: 500,
+                headers: {},
+                sessionTags: {}
+            })
+            m.assertEqual(RemoteLogger_normalizeConfig(invalid), config)
+        end sub
+
+        @it("keeps valid values")
+        sub keepsValidValues()
+            config = RemoteLogger_normalizeConfig({
+                enabled: true,
+                endpoint: "http://host/v1/logs",
+                level: "debug",
+                batchSize: 5,
+                flushIntervalMs: 500,
+                maxQueue: 50,
+                headers: { "X-Token": "t" },
+                sessionTags: { tester: "qa" }
+            })
+            m.assertTrue(config.enabled)
+            m.assertEqual(config.endpoint, "http://host/v1/logs")
+            m.assertEqual(config.level, "debug")
+            m.assertEqual(config.batchSize, 5)
+            m.assertEqual(config.flushIntervalMs, 500)
+            m.assertEqual(config.maxQueue, 50)
+            m.assertEqual(config.headers, { "X-Token": "t" })
+            m.assertEqual(config.sessionTags, { tester: "qa" })
+        end sub
+
+        @it("falls back to the default for wrong types")
+        sub wrongTypes()
+            config = RemoteLogger_normalizeConfig({
+                enabled: "yes",
+                endpoint: "http://host/v1/logs",
+                level: 4,
+                batchSize: "20",
+                flushIntervalMs: 0,
+                maxQueue: -1,
+                headers: "X-Token: t",
+                sessionTags: ["qa"]
+            })
+            m.assertFalse(config.enabled)
+            m.assertEqual(config.level, "info")
+            m.assertEqual(config.batchSize, 20)
+            m.assertEqual(config.flushIntervalMs, 2000)
+            m.assertEqual(config.maxQueue, 500)
+            m.assertEqual(config.headers, {})
+            m.assertEqual(config.sessionTags, {})
+        end sub
+
+        @it("canonicalises the level")
+        sub canonicalLevel()
+            m.assertEqual(RemoteLogger_normalizeConfig({ level: "WARN" }).level, "warn")
+            m.assertEqual(RemoteLogger_normalizeConfig({ level: "Trace" }).level, "trace")
+            m.assertEqual(RemoteLogger_normalizeConfig({ level: "verbose" }).level, "info")
+        end sub
+
+        @it("forces enabled false without an endpoint")
+        sub disabledWithoutEndpoint()
+            m.assertFalse(RemoteLogger_normalizeConfig({ enabled: true }).enabled)
+            m.assertFalse(RemoteLogger_normalizeConfig({ enabled: true, endpoint: "" }).enabled)
+            m.assertFalse(RemoteLogger_normalizeConfig({ enabled: true, endpoint: 1 }).enabled)
+        end sub
+
+        @describe("init")
+        @beforeEach
+        sub clearGlobal()
+            m.global.removeField("remoteLogger")
+        end sub
+
+        @afterEach
+        sub stopTask()
+            if m.global.hasField("remoteLogger")
+                m.global.remoteLogger.cancel = true
+                m.global.removeField("remoteLogger")
+            end if
+        end sub
+
+        @it("creates no node when disabled")
+        sub disabledCreatesNothing()
+            m.assertFalse(RemoteLogger_init({ enabled: false, endpoint: "http://host/v1/logs" }))
+            m.assertFalse(RemoteLogger_init({ enabled: true }))
+            m.assertFalse(m.global.hasField("remoteLogger"))
+        end sub
+
+        @it("creates and starts the Task when enabled")
+        sub createsTask()
+            m.assertTrue(RemoteLogger_init({ enabled: true, endpoint: "http://host/v1/logs", level: "DEBUG" }))
+            task = m.global.remoteLogger
+            m.assertEqual(task.subtype(), "RemoteLoggerTask")
+            m.assertEqual(task.level, "debug")
+            m.assertEqual(task.config.maxQueue, 500)
+            m.assertEqual(task.config.endpoint, "http://host/v1/logs")
+        end sub
+
+        @it("is a no-op the second time")
+        sub secondInitIsNoOp()
+            RemoteLogger_init({ enabled: true, endpoint: "http://host/v1/logs", level: "debug" })
+            first = m.global.remoteLogger
+            m.assertFalse(RemoteLogger_init({ enabled: true, endpoint: "http://other/v1/logs", level: "error" }))
+            m.assertTrue(first.isSameNode(m.global.remoteLogger))
+            m.assertEqual(m.global.remoteLogger.level, "debug")
+        end sub
+    end class
+end namespace

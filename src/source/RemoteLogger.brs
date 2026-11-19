@@ -18,16 +18,64 @@ function RemoteLogger(tag as string) as object
 
     facade.node = sink
     facade.levels = RemoteLogger_levels()
-    facade.names = ["", "error", "warn", "info", "debug", "trace"] ' index = level value
+    facade.names = RemoteLogger_levelNames()
     facade.minLevel = RemoteLogger_levelValue(sink.level, facade.levels)
     facade.seq = 0 ' per facade; the Task re-sequences per session later
     facade.clock = CreateObject("roDateTime")
     return facade
 end function
 
+' Starts the logger Task and stores it on m.global as "remoteLogger". Render thread only.
+' Does nothing when disabled or already started. Returns true when it started the Task.
+function RemoteLogger_init(config as dynamic) as boolean
+    config = RemoteLogger_normalizeConfig(config)
+    if not config.enabled then return false
+    if m.global.hasField("remoteLogger") then return false
+
+    task = CreateObject("roSGNode", "RemoteLoggerTask")
+    task.config = config
+    task.level = config.level
+    m.global.addFields({ remoteLogger: task })
+    task.control = "run"
+    return true
+end function
+
+' Returns every configuration key with a valid value; a missing or wrongly typed value gets its default.
+function RemoteLogger_normalizeConfig(config as dynamic) as object
+    if not RemoteLogger_isAssocArray(config) then config = {}
+    normalized = {
+        enabled: false,
+        endpoint: "",
+        level: RemoteLogger_levelNames()[RemoteLogger_levelValue(config.level)],
+        batchSize: RemoteLogger_positiveInt(config.batchSize, 20),
+        flushIntervalMs: RemoteLogger_positiveInt(config.flushIntervalMs, 2000),
+        maxQueue: RemoteLogger_positiveInt(config.maxQueue, 500),
+        headers: {},
+        sessionTags: {}
+    }
+    if RemoteLogger_isStringNotEmpty(config.endpoint)
+        normalized.endpoint = config.endpoint
+        normalized.enabled = GetInterface(config.enabled, "ifBoolean") <> invalid and config.enabled
+    end if
+    if RemoteLogger_isAssocArray(config.headers) then normalized.headers = config.headers
+    if RemoteLogger_isAssocArray(config.sessionTags) then normalized.sessionTags = config.sessionTags
+    return normalized
+end function
+
+' Zero or less would break the ring buffer and the wait loop, so it counts as wrong too.
+function RemoteLogger_positiveInt(value as dynamic, fallback as integer) as integer
+    if GetInterface(value, "ifInt") <> invalid and value > 0 then return value
+    return fallback
+end function
+
 ' AA keys ignore case, so a lookup needs no LCase.
 function RemoteLogger_levels() as object
     return { error: 1, warn: 2, info: 3, debug: 4, trace: 5 }
+end function
+
+' Index = level value.
+function RemoteLogger_levelNames() as object
+    return ["", "error", "warn", "info", "debug", "trace"]
 end function
 
 ' Unknown or non-string names count as info, so a mapping mistake still arrives.
