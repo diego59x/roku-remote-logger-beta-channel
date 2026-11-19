@@ -84,7 +84,7 @@ end function
 function RemoteLogger_jsonScalarTypes() as object
     return {
         String: true, roString: true,
-        Integer: true, roInt: true,
+        Integer: true, roInteger: true,
         LongInteger: true, roLongInteger: true,
         Float: true, roFloat: true,
         Double: true, roDouble: true,
