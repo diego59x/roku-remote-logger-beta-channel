@@ -97,7 +97,7 @@ A log call on a hot path must stay cheap. These rules are requirements, and mile
 1. Filter by level before any allocation.
 2. Cache the level and the node reference when the facade is created. Do not read configuration per call.
 3. One field write per entry at most. No `callFunc`, no field reads, no `observeField` round trip.
-4. Do not format on the caller's thread. The facade passes the message and the data object as given; the Task serialises them.
+4. Do not format on the caller's thread. The facade passes the message and the data object as given (a non-string message is converted to a string); the Task serialises them.
 5. Disabled means absent. No Task node is created and facades hold nothing.
 
 ## Configuration

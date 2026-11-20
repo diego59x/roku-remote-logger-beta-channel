@@ -1,0 +1,130 @@
+namespace tests
+    @suite("RemoteLogger facade")
+    class RemoteLoggerTests extends rooibos.BaseTestSuite
+        @describe("level names")
+        @it("maps each name to its value, ignoring case")
+        sub mapsLevelNames()
+            m.assertEqual(RemoteLogger_levelValue("error"), 1)
+            m.assertEqual(RemoteLogger_levelValue("warn"), 2)
+            m.assertEqual(RemoteLogger_levelValue("info"), 3)
+            m.assertEqual(RemoteLogger_levelValue("DEBUG"), 4)
+            m.assertEqual(RemoteLogger_levelValue("Trace"), 5)
+        end sub
+
+        @it("treats unknown and non-string names as info")
+        sub unknownLevelIsInfo()
+            m.assertEqual(RemoteLogger_levelValue("verbose"), 3)
+            m.assertEqual(RemoteLogger_levelValue(""), 3)
+            m.assertEqual(RemoteLogger_levelValue(invalid), 3)
+            m.assertEqual(RemoteLogger_levelValue(2), 3)
+        end sub
+
+        @describe("disabled facade")
+        @it("does nothing without a node on m.global")
+        sub disabledWithoutNode()
+            m.global.removeField("remoteLogger")
+            logger = RemoteLogger("Test")
+            m.assertInvalid(logger.node)
+            logger.error("boom", { a: 1 })
+            logger.write("info", "Test", "msg", invalid)
+        end sub
+
+        @describe("enabled facade")
+        @beforeEach
+        sub addSink()
+            m.sink = CreateObject("roSGNode", "Node")
+            m.sink.addField("level", "string", false)
+            m.sink.addField("entry", "assocarray", true)
+            m.sink.level = "info"
+            m.global.addFields({ remoteLogger: m.sink })
+        end sub
+
+        @afterEach
+        sub removeSink()
+            m.global.removeField("remoteLogger")
+            m.sink = invalid
+        end sub
+
+        @it("skips entries below the level")
+        sub filtersBelowLevel()
+            logger = RemoteLogger("Test")
+            logger.debug("hidden")
+            logger.trace("hidden")
+            ' An unset assocarray field is not an AA on device, so prove "not written" through seq.
+            logger.info("shown")
+            m.assertEqual(m.sink.entry.seq, 1)
+            m.assertEqual(m.sink.entry.msg, "shown")
+        end sub
+
+        @it("writes entries at or above the level")
+        sub writesAtOrAboveLevel()
+            logger = RemoteLogger("Test")
+            logger.info("shown")
+            m.assertEqual(m.sink.entry.lvl, "info")
+            logger.error("shown")
+            m.assertEqual(m.sink.entry.lvl, "error")
+        end sub
+
+        @it("builds the entry with canonical fields")
+        sub buildsEntry()
+            logger = RemoteLogger("Player")
+            logger.write("WARN", "Other", "state changed", { state: "playing" })
+            entry = m.sink.entry
+            m.assertAAHasKeys(entry, ["seq", "t", "lvl", "tag", "msg", "data"])
+            m.assertEqual(entry.seq, 1)
+            m.assertTrue(entry.t > 1700000000000&)
+            m.assertEqual(entry.lvl, "warn")
+            m.assertEqual(entry.tag, "Other")
+            m.assertEqual(entry.msg, "state changed")
+            m.assertEqual(entry.data, { state: "playing" })
+        end sub
+
+        @it("sends an unknown level as info")
+        sub unknownLevelSentAsInfo()
+            logger = RemoteLogger("Test")
+            logger.write("verbose", "Test", "msg", invalid)
+            m.assertEqual(m.sink.entry.lvl, "info")
+        end sub
+
+        @it("passes data through whatever its type")
+        sub passesDataThrough()
+            logger = RemoteLogger("Test")
+            logger.info("array", [1, "two"])
+            m.assertEqual(m.sink.entry.data, [1, "two"])
+            logger.info("string", "text")
+            m.assertEqual(m.sink.entry.data, "text")
+            logger.info("none")
+            m.assertInvalid(m.sink.entry.data)
+        end sub
+
+        @it("converts a non-string message")
+        sub convertsMessage()
+            logger = RemoteLogger("Test")
+            logger.info(42)
+            m.assertEqual(m.sink.entry.msg, "42")
+            logger.info(invalid)
+            m.assertEqual(m.sink.entry.msg, "invalid")
+            logger.info({ a: 1 })
+            m.assertTrue(RemoteLogger_isStringNotEmpty(m.sink.entry.msg))
+        end sub
+
+        @it("increments seq per entry")
+        sub incrementsSeq()
+            logger = RemoteLogger("Test")
+            logger.info("one")
+            m.assertEqual(m.sink.entry.seq, 1)
+            logger.debug("filtered")
+            logger.warn("two")
+            m.assertEqual(m.sink.entry.seq, 2)
+        end sub
+
+        @it("reads the level once, at construction")
+        sub cachesLevel()
+            m.sink.level = "debug"
+            logger = RemoteLogger("Test")
+            m.sink.level = "error"
+            logger.debug("still shown")
+            m.assertEqual(m.sink.entry.lvl, "debug")
+        end sub
+    end class
+end namespace
