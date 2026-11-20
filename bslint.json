@@ -2,7 +2,8 @@
     "plugins": ["@rokucommunity/bslint"],
     "files": [
         { "src": "src/**/*", "dest": "" },
-        { "src": "sample/**/*", "dest": "" }
+        { "src": "sample/**/*", "dest": "" },
+        { "src": "tests/**/*.bs", "dest": "" }
     ],
     "rules": {
         "named-function-style": "auto"

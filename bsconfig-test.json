@@ -1,0 +1,15 @@
+{
+  "rootDir": ".",
+  "files": [
+    { "src": "sample/manifest", "dest": "" },
+    { "src": "src/**/*", "dest": "" },
+    { "src": "tests/**/*.bs", "dest": "source/tests" }
+  ],
+  "createPackage": true,
+  "stagingDir": "out/.test-staging",
+  "outFile": "out/channel-tests.zip",
+  "plugins": ["rooibos-roku"],
+  "rooibos": {
+    "showOnlyFailures": true
+  }
+}

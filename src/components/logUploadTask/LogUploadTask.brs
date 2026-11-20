@@ -1,15 +1,15 @@
 sub init()
-    m.top.functionName = "sendLog"
+    m.top.functionName = "RemoteLogger_sendLog"
 end sub
 
-function sendLog() as boolean
+function RemoteLogger_sendLog() as boolean
     request = m.top.request
-    if not TypeGuard_isAssocArray(request) or not TypeGuard_isStringNotEmpty(request.url)
+    if not RemoteLogger_isAssocArray(request) or not RemoteLogger_isStringNotEmpty(request.url)
         m.top.response = { success: false, error: "no_url" }
         return true
     end if
 
-    if not TypeGuard_isString(request.message)
+    if not RemoteLogger_isString(request.message)
         m.top.response = { success: false, error: "invalid_message" }
         return true
     end if
