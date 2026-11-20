@@ -94,7 +94,7 @@ Run the unit-test build:
 npm test
 ```
 
-This compiles the Rooibos test suite for CI. To execute it on a Roku device, configure `ROKU_HOST` (and `ROKU_PASSWORD` if needed), then run `npm run test:device`. For a Roku Cloud Emulator, set `ROKU_RCE_TOKEN` and pass either `--esn <ESN>` or `--instance-url <URL>` to the script.
+This compiles the Rooibos test suite for CI. The test package holds the library (`src/`) and the specs (`tests/`, placed under `source/tests`), but not the sample channel: Rooibos generates its own `main` for it. To execute it on a Roku device, configure `ROKU_HOST` (and `ROKU_PASSWORD` if needed), then run `npm run test:device`. For a Roku Cloud Emulator, set `ROKU_RCE_TOKEN` and pass either `--esn <ESN>` or `--instance-url <URL>` to the script.
 
 ## Safety
 
