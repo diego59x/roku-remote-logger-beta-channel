@@ -96,8 +96,8 @@ A log call on a hot path must stay cheap. These rules are requirements, and mile
 
 1. Filter by level before any allocation.
 2. Cache the level and the node reference when the facade is created. Do not read configuration per call.
-3. One field write per entry at most. No `callFunc`, no field reads, no `observeField` round trip.
-4. Do not format on the caller's thread. The facade passes the message and the data object as given; the Task serialises them.
+3. One field write per entry at most. No `callFunc`, no field reads once the Task is ready (until then the facade reads `ready` and buffers), no `observeField` round trip.
+4. Do not format on the caller's thread. The facade passes the message and the data object as given (a non-string message is converted to a string); the Task serialises them.
 5. Disabled means absent. No Task node is created and facades hold nothing.
 
 ## Configuration
@@ -134,7 +134,7 @@ All values are fixed once `RemoteLogger_init` has run. To log at another level, 
 | 4xx reply | Drop the batch; do not retry |
 | Queue full | Drop the oldest entries and count them |
 | Entry too large | Truncate the message and mark the entry as truncated |
-| Data object cannot be serialised | Send the entry without the data and mark it |
+| Data object cannot be serialised | Replace the values it cannot hold with their type name (or, if it still fails, send the entry without the data) and mark it |
 | Library not initialised | Facade calls do nothing |
 
 Dropped counts travel in the next successful batch, so the reader knows the log has gaps.

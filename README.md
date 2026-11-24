@@ -49,6 +49,14 @@ It exists for the builds where the debug console is out of reach: beta channels,
    end sub
    ```
 
+To try it with the sample channel, sideload `out/channel.zip` (see [Build](#build)) and launch it with a deep link that names the server's `/v1/logs` endpoint and the level:
+
+```bash
+curl -d '' 'http://<roku-ip>:8060/launch/dev?remoteLog=http://<laptop-ip>:8085/v1/logs&remoteLogLevel=debug'
+```
+
+The sample shows on screen whether remote logging is on, then logs from its scene every 5 seconds and from a Task.
+
 If the host app already has a logger, do not add call sites. Write an adapter instead: see [Integration](docs/INTEGRATION.md).
 
 ## Documentation

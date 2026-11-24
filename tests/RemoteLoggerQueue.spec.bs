@@ -1,0 +1,66 @@
+namespace tests
+    @suite("RemoteLogger queue")
+    class RemoteLoggerQueueTests extends rooibos.BaseTestSuite
+        @describe("push and take")
+        @it("takes entries oldest first")
+        sub takesInOrder()
+            q = RemoteLogger_queueNew(5)
+            RemoteLogger_queuePush(q, "a")
+            RemoteLogger_queuePush(q, "b")
+            RemoteLogger_queuePush(q, "c")
+            m.assertEqual(RemoteLogger_queueTake(q, 2), ["a", "b"])
+            m.assertEqual(RemoteLogger_queueTake(q, 2), ["c"])
+        end sub
+
+        @it("returns only what is there when asked for more")
+        sub takesMoreThanAvailable()
+            q = RemoteLogger_queueNew(5)
+            RemoteLogger_queuePush(q, "a")
+            RemoteLogger_queuePush(q, "b")
+            m.assertEqual(RemoteLogger_queueTake(q, 10), ["a", "b"])
+            m.assertEqual(RemoteLogger_queueCount(q), 0)
+            m.assertEqual(RemoteLogger_queueTake(q, 10), [])
+        end sub
+
+        @it("counts entries")
+        sub counts()
+            q = RemoteLogger_queueNew(3)
+            m.assertEqual(RemoteLogger_queueCount(q), 0)
+            RemoteLogger_queuePush(q, 1)
+            RemoteLogger_queuePush(q, 2)
+            m.assertEqual(RemoteLogger_queueCount(q), 2)
+            RemoteLogger_queueTake(q, 1)
+            m.assertEqual(RemoteLogger_queueCount(q), 1)
+        end sub
+
+        @describe("capacity")
+        @it("drops the oldest when full and counts it")
+        sub dropsOldest()
+            q = RemoteLogger_queueNew(3)
+            for i = 1 to 5
+                RemoteLogger_queuePush(q, i)
+            end for
+            m.assertEqual(RemoteLogger_queueCount(q), 3)
+            m.assertEqual(q.dropped, 2)
+            m.assertEqual(RemoteLogger_queueTake(q, 3), [3, 4, 5])
+        end sub
+
+        @it("keeps order across wraparound")
+        sub wrapsAround()
+            q = RemoteLogger_queueNew(3)
+            first = 1
+            for cycle = 1 to 4
+                RemoteLogger_queuePush(q, first)
+                RemoteLogger_queuePush(q, first + 1)
+                m.assertEqual(RemoteLogger_queueTake(q, 2), [first, first + 1])
+                first = first + 2
+            end for
+            RemoteLogger_queuePush(q, "x")
+            RemoteLogger_queuePush(q, "y")
+            RemoteLogger_queuePush(q, "z")
+            RemoteLogger_queuePush(q, "w")
+            m.assertEqual(q.dropped, 1)
+            m.assertEqual(RemoteLogger_queueTake(q, 5), ["y", "z", "w"])
+        end sub
+    end class
+end namespace
