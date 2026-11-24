@@ -3,6 +3,7 @@
   "files": [
     { "src": "sample/manifest", "dest": "" },
     { "src": "src/**/*", "dest": "" },
+    { "src": "sample/source/flows/**/*", "dest": "source/flows" },
     { "src": "tests/**/*.bs", "dest": "source/tests" }
   ],
   "createPackage": true,

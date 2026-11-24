@@ -21,6 +21,10 @@ sub onLaunchArgs()
     m.log = RemoteLogger("MainScene")
     m.log.info("sample started", { "remoteLogging": started })
 
+    ' Flow C: the host logger gets one more handler; its call sites stay as they are.
+    m.hostLog = HostLogger("MainScene")
+    m.hostLog.addHandler(RemoteLogHandler())
+
     ticker = m.top.findNode("ticker")
     ticker.observeField("fire", "onTick")
     ticker.control = "start"
@@ -33,5 +37,6 @@ sub onTick()
     m.ticks = m.ticks + 1
     m.log.debug("tick", { count: m.ticks })
     m.log.info("heartbeat", { count: m.ticks, "uptimeSec": m.ticks * 5 })
+    m.hostLog.warning("host logger heartbeat", { count: m.ticks })
     if m.ticks = 3 then m.log.error("simulated failure on third tick", { count: m.ticks })
 end sub

@@ -30,7 +30,8 @@ function RemoteLogger(tag as string) as object
     return facade
 end function
 
-' Starts the logger Task and stores it on m.global as "remoteLogger". Render thread only.
+' Starts the logger Task and stores it on m.global as "remoteLogger". Call it from the render
+' thread, or from main() after screen.show(); before that the Task component cannot be created.
 ' Does nothing when disabled or already started. Returns true when it started the Task.
 function RemoteLogger_init(config as dynamic) as boolean
     config = RemoteLogger_normalizeConfig(config)

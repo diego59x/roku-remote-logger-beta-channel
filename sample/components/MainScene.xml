@@ -6,6 +6,8 @@
     </interface>
     <script type="text/brightscript" uri="pkg:/source/utils.brs" />
     <script type="text/brightscript" uri="pkg:/source/RemoteLogger.brs" />
+    <script type="text/brightscript" uri="pkg:/source/flows/HostLogger.brs" />
+    <script type="text/brightscript" uri="pkg:/source/flows/RemoteLogHandler.brs" />
     <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
     <children>
         <Group id="MainView">
