@@ -4,14 +4,14 @@ Milestones are in order, and each one leaves something usable. They carry exit c
 
 | Milestone | Outcome | Status |
 |---|---|---|
-| [M0 Foundations](#m0-foundations) | A repository others can build, test and contribute to | Not started |
-| [M1 Core pipeline](#m1-core-pipeline) | Logs travel from a sample channel to the server in batches | Not started |
+| [M0 Foundations](#m0-foundations) | A repository others can build, test and contribute to | Done |
+| [M1 Core pipeline](#m1-core-pipeline) | Logs travel from a sample channel to the server in batches | Done |
 | [M2 Integration](#m2-integration) | An existing app adopts the library without touching call sites | Not started |
 | [M3 Resilience and performance](#m3-resilience-and-performance) | Safe to leave on for a whole beta session | Not started |
 | [M4 Server tools](#m4-server-tools) | Logs from several devices are easy to follow and search with standard tools | Not started |
 | [M5 Hardening](#m5-hardening) | Usable outside a trusted local network | Not started |
 
-The proof of concept that exists today (one upload Task and a Python receiver) is the starting point for M1 and M4.
+A milestone's status changes to Done only when its "Done when" holds on a device.
 
 ## M0 Foundations
 
@@ -30,13 +30,16 @@ Set the repository up as a library.
 Build the path described in [Architecture](ARCHITECTURE.md).
 
 - Facade: `RemoteLogger(tag)` with the five level methods, `write`, and level filtering.
-- `RemoteLogger_init` and the single Task on `m.global`.- Queue, batcher and HTTP transport.
+- `RemoteLogger_init` and the single Task on `m.global`.
+- Queue, batcher and HTTP transport.
 - Protocol v1 on both the device and the server ([Protocol](PROTOCOL.md)).
 - Disabled mode: no Task, no-op facades.
 - Remove the deprecated `InitClientCertificates` call carried by the proof of concept.
-- Settle the two M1 [open questions](ARCHITECTURE.md#open-questions) by measuring on a device.
+- Decide the two M1 [open questions](ARCHITECTURE.md#open-questions).
 
 **Done when:** the sample channel logs from the render thread and from a Task, the server shows the entries within the flush interval, and a disabled build creates no Task.
+
+**Result:** done, on a Roku Ultra (OS 16.0.4). The sample logged from the scene and from a Task, and the entries reached the server within the flush interval. Launched without `remoteLog`, the node tree had no `RemoteLoggerTask`; launched with it, there was one. The two open questions were decided without measurement; measuring them moved to M3. Retry with backoff, the bounded queue, dropped-entry accounting and the cancel field also shipped in M1.
 
 ## M2 Integration
 
@@ -54,9 +57,10 @@ Make adoption cheap for an app that already logs.
 
 Make it safe to forget it is on.
 
-- Retry with backoff, bounded ring buffer and dropped-entry accounting.
 - Suspend, resume and exit handling, including instant resume.
-- Clean stop through a cancel field.
+- Split a body over 256 KB into several requests (the final flush on exit sends everything at once today).
+- Report entries a facade dropped while waiting for the Task to start (counted on the facade only today).
+- Measure the cost behind the two M1 open questions and change the decision if the numbers call for it.
 - Profile the per-call cost on a low-end device from the render thread and from a Task; add facade buffering if the numbers call for it.
 - Decide on the persisted tail of `error` entries.
 - Publish the measured cost in the documentation.

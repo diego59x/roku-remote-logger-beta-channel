@@ -1,8 +1,6 @@
 # Protocol
 
-The HTTP contract between the device library and a log server. Version 1 is a *draft* until milestone M1 ships; after that, changes that break a v1 client need a new version path.
-
-The proof of concept in the repository sends one plain-text line per request to `/log`. That format is replaced by this one.
+The HTTP contract between the device library and a log server. Version 1 shipped with milestone M1: a change that breaks a v1 client needs a new version path.
 
 ## Request
 
@@ -66,13 +64,13 @@ The library never sends a device serial number or an advertising id.
 
 From most to least severe: `error`, `warn`, `info`, `debug`, `trace`.
 
-### Limits *(planned defaults)*
+### Limits
 
 | Limit | Value |
 |---|---|
 | Entries per batch | 20 |
 | Message length | 4,000 characters, then truncated |
-| Body size | 256 KB; a larger batch is split |
+| Body size | 256 KB. The server refuses a larger body with `413`. The device does not split a large batch yet (M3) |
 
 ## Response
 

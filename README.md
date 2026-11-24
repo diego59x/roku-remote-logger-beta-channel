@@ -4,7 +4,7 @@ A BrightScript/SceneGraph library that ships logs from a running Roku channel to
 
 It exists for the builds where the debug console is out of reach: beta channels, QA builds on retail devices, and field devices on someone else's network. Those builds have no telnet on port 8085, so a problem that only reproduces there leaves no trace.
 
-> **Status: planning.** The repository holds a proof of concept (one Task that POSTs a string, and a Python receiver). The documents below describe the library to be built. Names and signatures marked *planned* may change until milestone M1 ships.
+> **Status: M1 done.** The core pipeline works end to end on a device: facade, logger Task, batching, HTTP transport (protocol v1) and the receiver. The public API and configuration keys may still change until milestone M2 freezes them.
 
 ## What it does
 
@@ -19,7 +19,7 @@ It exists for the builds where the debug console is out of reach: beta channels,
 - Not an analytics or APM product. It does not replace a monitoring vendor and should run next to one without interfering.
 - Not meant to be on for the general public. It is a diagnostic tool for beta and QA audiences, behind a switch the host app controls.
 
-## Quick start (planned API)
+## Quick start
 
 1. Start the receiver on a machine the Roku can reach:
 

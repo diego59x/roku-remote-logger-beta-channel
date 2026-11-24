@@ -1,6 +1,6 @@
 # Architecture
 
-This document describes the target design. The code in the repository today is a proof of concept and does not yet follow it.
+This document describes the design. Milestone M1 implements the core of it; the parts the [roadmap](ROADMAP.md) assigns to M2 or later are not built yet.
 
 ## Goals
 
@@ -104,7 +104,7 @@ A log call on a hot path must stay cheap. These rules are requirements, and mile
 
 The host app passes one object to `RemoteLogger_init`. Where the values come from (a remote flag, the registry, a deep link, a build constant) is the host app's choice.
 
-| Key | Meaning | Default *(planned)* |
+| Key | Meaning | Default |
 |---|---|---|
 | `enabled` | Master switch | `false` |
 | `endpoint` | Full URL of the server's log route | none; required when enabled |
@@ -150,7 +150,7 @@ Dropped counts travel in the next successful batch, so the reader knows the log 
 
 Each is settled by measurement on a device in the milestone named.
 
-1. **Write strategy from Task threads (M1).** Direct write per entry is simplest but costs one rendezvous each time a non-render thread logs. The alternative is a small buffer in the facade that is flushed in groups, which cuts rendezvous but can hold entries back in a quiet component. The default is direct write; buffering becomes an option if profiling shows the need.
-2. **Entry hand-off field type (M1).** An `assocarray` field with `alwaysNotify`, or a node child per entry. Decided by copy cost.
+1. **Write strategy from Task threads (M3).** Direct write per entry is simplest but costs one rendezvous each time a non-render thread logs. The alternative is a small buffer in the facade that is flushed in groups, which cuts rendezvous but can hold entries back in a quiet component. M1 ships direct write (a facade buffers only until the Task is ready); buffering becomes an option if M3 profiling shows the need.
+2. **Entry hand-off field type (M3).** An `assocarray` field with `alwaysNotify`, or a node child per entry. M1 ships the `assocarray` field; M3 measures the copy cost.
 3. **Persisted tail (M3).** The registry is small. Whether keeping the last few `error` entries across a crash is worth the space is decided once the size of a typical entry is known.
 4. **Capturing system events (later).** Whether to forward `roSystemLog` events (HTTP errors, bandwidth) as entries, or leave that to monitoring vendors.
