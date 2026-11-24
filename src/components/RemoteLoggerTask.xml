@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="RemoteLoggerTask" extends="Task">
+    <interface>
+        <field id="config" type="assocarray" />
+        <field id="level" type="string" />
+        <field id="entry" type="assocarray" alwaysNotify="true" />
+        <field id="cancel" type="boolean" />
+        <field id="ready" type="boolean" value="false" />
+        <field id="queued" type="integer" />
+        <field id="dropped" type="integer" />
+        <field id="sent" type="integer" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/source/RemoteLoggerQueue.brs" />
+    <script type="text/brightscript" uri="pkg:/source/RemoteLoggerBatch.brs" />
+    <script type="text/brightscript" uri="RemoteLoggerTask.brs" />
+</component>

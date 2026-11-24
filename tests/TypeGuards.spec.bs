@@ -7,5 +7,16 @@ namespace tests
             m.assertTrue(RemoteLogger_isAssocArray({}))
             m.assertFalse(RemoteLogger_isAssocArray(invalid))
         end sub
+
+        @describe("strings")
+        @it("recognizes intrinsic and boxed strings")
+        sub recognizesStrings()
+            m.assertTrue(RemoteLogger_isString("text"))
+            m.assertTrue(RemoteLogger_isString(CreateObject("roString")))
+            m.assertFalse(RemoteLogger_isString(1))
+            m.assertFalse(RemoteLogger_isString(invalid))
+            m.assertTrue(RemoteLogger_isStringNotEmpty("text"))
+            m.assertFalse(RemoteLogger_isStringNotEmpty(""))
+        end sub
     end class
 end namespace

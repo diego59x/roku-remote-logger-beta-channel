@@ -1,4 +1,4 @@
-sub Main()
+sub Main(args as dynamic)
     screen = CreateObject("roSGScreen")
     m.port = CreateObject("roMessagePort")
     screen.setMessagePort(m.port)
@@ -6,6 +6,9 @@ sub Main()
     m.scene = screen.CreateScene("MainScene")
     screen.getGlobalNode().addFields({ mainscene: m.scene })
     screen.show()
+
+    ' Dev tool only: a public build must ignore these parameters.
+    m.scene.launchArgs = { remoteLog: args.remoteLog, remoteLogLevel: args.remoteLogLevel }
 
     m.scene.signalBeacon("AppLaunchComplete")
     m.scene.observeField("exitApp", m.port)
@@ -22,4 +25,3 @@ sub Main()
         end if
     end while
 end sub
-

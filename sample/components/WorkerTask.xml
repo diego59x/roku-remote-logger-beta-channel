@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<component name="WorkerTask" extends="Task">
+    <script type="text/brightscript" uri="pkg:/source/utils.brs" />
+    <script type="text/brightscript" uri="pkg:/source/RemoteLogger.brs" />
+    <script type="text/brightscript" uri="pkg:/components/WorkerTask.brs" />
+</component>
