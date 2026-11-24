@@ -3,3 +3,4 @@ node_modules/
 out/
 server/logs/
 __pycache__/
+.env
