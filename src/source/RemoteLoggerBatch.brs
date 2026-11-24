@@ -7,8 +7,8 @@ function RemoteLogger_sessionEnvelope(config as object) as object
     device = CreateObject("roDeviceInfo")
     os = device.getOSVersion()
     clock = CreateObject("roDateTime")
-    tags = config.sessionTags
-    ' A tag that cannot be serialised would break every body, so drop the tags instead.
+    ' Clean the tags like entry data, so a node in them neither breaks every body nor prints a console error.
+    tags = RemoteLogger_safeData(config.sessionTags, 1, { truncated: false, scalars: RemoteLogger_jsonScalarTypes() })
     if FormatJson(tags) = "" then tags = {}
     return {
         id: device.getRandomUUID().replace("-", ""),

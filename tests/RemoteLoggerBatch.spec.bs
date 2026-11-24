@@ -40,6 +40,14 @@ namespace tests
             m.assertNotEqual(RemoteLogger_sessionEnvelope({ sessionTags: {} }).id, RemoteLogger_sessionEnvelope({ sessionTags: {} }).id)
         end sub
 
+        @it("replaces a node in the session tags and keeps the other tags")
+        sub envelopeCleansTags()
+            s = RemoteLogger_sessionEnvelope({ sessionTags: { tester: "qa-01", screen: CreateObject("roSGNode", "Node") } })
+            m.assertEqual(s.tags.tester, "qa-01")
+            m.assertEqual(s.tags.screen, "<roSGNode:Node>")
+            m.assertTrue(FormatJson(s) <> "")
+        end sub
+
         @describe("buildBody")
         @it("parses back to the protocol shape")
         sub bodyShape()
