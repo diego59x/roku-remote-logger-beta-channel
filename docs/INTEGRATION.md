@@ -31,7 +31,7 @@ If the channel lints third-party code, exclude the library's folder the same way
 
 ## 2. Initialise
 
-Call `RemoteLogger_init` once, on the render thread, as early as the scene's `init()`. It creates the Task node and stores it on `m.global`.
+Call `RemoteLogger_init` once, as early as the scene's `init()`. It creates the Task node and stores it on `m.global`. It also works from `main()` once `screen.show()` has run, but not before: until then the Task component cannot be created.
 
 ```brightscript
 sub init()
@@ -44,7 +44,7 @@ sub init()
 end sub
 ```
 
-Entries logged before this call are dropped. If start-up logs matter, initialise before anything else in the scene.
+A facade looks for the Task once, when it is built. A facade built before this call, or an adapter that holds one, stays silent for its whole life, even after the Task starts. Build loggers and adapters after `RemoteLogger_init`; if start-up logs matter, initialise before anything else in the scene.
 
 All options are listed in [Architecture: configuration](ARCHITECTURE.md#configuration).
 
@@ -104,14 +104,17 @@ If the host logger accepts handlers (also called sinks, appenders or transports)
 function RemoteLogHandler() as object
     return {
         log: RemoteLogger("host")
-        emit: function(entry as object)
-            m.log.write(entry.levelName, entry.name, entry.message, entry.extra)
-        end function
+        levels: { warning: "warn", verbose: "debug" }   ' host names that differ
+        emit: sub(entry as object)
+            level = entry.levelName
+            if m.levels.doesExist(level) then level = m.levels[level]
+            m.log.write(level, entry.name, entry.message, entry.extra)
+        end sub
     }
 end function
 ```
 
-`write(level, tag, message, data)` is the single sink entry point; the level methods are shortcuts for it. The handler's method name and the fields of `entry` are whatever the host logger defines; only the body is fixed.
+`write(level, tag, message, data)` is the single sink entry point; the level methods are shortcuts for it. The handler's method name and the fields of `entry` are whatever the host logger defines; only the body is fixed. The sample channel runs this recipe against a small host logger in [`sample/source/flows/`](../sample/source/flows/).
 
 Register it next to the handlers the logger already has:
 
@@ -179,12 +182,12 @@ The translation is a lookup in the adapter, a few lines per app. Three schemes c
 | `trace` | | `trace` | |
 
 - **Numeric host levels:** index an array of library names, as in Flow D.
-- **Named host levels that match:** pass the name through, as in Flow C.
-- **Named host levels that differ:** use a small lookup object, for example `{ verbose: "debug", fatal: "error" }`.
+- **Named host levels that match:** pass the name through.
+- **Named host levels that differ:** use a small lookup object for those only, for example `{ verbose: "debug", fatal: "error" }`, as in Flow C.
 
 An unknown level name is sent as `info`, so a mapping mistake shows up in the output and loses nothing.
 
-**Data can be any type.** Host loggers pass an object, an array, a string, a number or `invalid` as the extra argument. The adapter hands it over unchanged; the library accepts all of them and serialises what it can.
+**Data can be any type.** Host loggers pass an object, an array, a string, a number or `invalid` as the extra argument. The adapter hands it over unchanged; the library accepts all of them and serialises what it can. One exception: some host loggers pass a marker value, such as a fixed string, when the call had no extra argument. Turn that marker into `invalid` in the adapter, or every entry carries it as data.
 
 **Quote camelCase keys in data literals.** BrightScript stores unquoted keys of an AA literal in lower case, so `{ uptimeSec: 5 }` reaches the server as `uptimesec`. Write `{ "uptimeSec": 5 }` to keep the case.
 
@@ -221,8 +224,10 @@ Read the value before `RemoteLogger_init` and pass `enabled: false` when in doub
 The level travels with the endpoint, from the same source, so a tester chooses both at launch without a new build. With a deep link, for example:
 
 ```bash
-curl -d '' 'http://<roku-ip>:8060/launch/<channel-id>?remoteLog=http://192.168.1.20:8085/v1/logs&remoteLogLevel=debug'
+curl -d '' 'http://<roku-ip>:8060/launch/<channel-id>?remoteLog=http%3A%2F%2F192.168.1.20%3A8085%2Fv1%2Flogs&remoteLogLevel=debug'
 ```
+
+Encode the endpoint as above. The device answers `404` to a launch whose parameter holds an unencoded URL, and the channel does not start.
 
 The host app reads both parameters from its launch arguments and passes them on:
 

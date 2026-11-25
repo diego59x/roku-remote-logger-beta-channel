@@ -1,0 +1,66 @@
+namespace tests
+    @suite("Flow C handler")
+    class RemoteLogHandlerTests extends rooibos.BaseTestSuite
+        @describe("RemoteLogHandler")
+        @beforeEach
+        sub addSink()
+            m.sink = CreateObject("roSGNode", "Node")
+            m.sink.addField("level", "string", false)
+            m.sink.addField("entry", "assocarray", true)
+            m.sink.addField("ready", "boolean", false)
+            m.sink.level = "debug"
+            m.sink.ready = true
+            m.global.addFields({ remoteLogger: m.sink })
+            m.host = HostLogger("Player")
+            m.host.addHandler(RemoteLogHandler())
+        end sub
+
+        @afterEach
+        sub removeSink()
+            m.global.removeField("remoteLogger")
+            m.sink = invalid
+            m.host = invalid
+        end sub
+
+        @it("forwards a host entry with its name as tag and its extra as data")
+        sub forwardsEntry()
+            m.host.info("state changed", { state: "playing" })
+            entry = m.sink.entry
+            m.assertEqual(entry.lvl, "info")
+            m.assertEqual(entry.tag, "Player")
+            m.assertEqual(entry.msg, "state changed")
+            m.assertEqual(entry.data, { state: "playing" })
+        end sub
+
+        @it("maps host level names that differ")
+        sub mapsLevels()
+            m.host.warning("slow")
+            m.assertEqual(m.sink.entry.lvl, "warn")
+            m.host.verbose("detail")
+            m.assertEqual(m.sink.entry.lvl, "debug")
+            m.host.error("boom")
+            m.assertEqual(m.sink.entry.lvl, "error")
+        end sub
+
+        @it("leaves the host's own level filter first")
+        sub hostFilterFirst()
+            m.host.info("one")
+            m.host.level = 1
+            m.host.warning("filtered by the host")
+            m.assertEqual(m.sink.entry.msg, "one")
+            m.assertEqual(m.sink.entry.seq, 1)
+        end sub
+
+        @it("does nothing when built before the logger Task exists")
+        sub builtTooEarly()
+            m.global.removeField("remoteLogger")
+            early = HostLogger("Early")
+            early.addHandler(RemoteLogHandler())
+            m.global.addFields({ remoteLogger: m.sink })
+            early.info("lost")
+            m.host.info("kept")
+            m.assertEqual(m.sink.entry.msg, "kept")
+            m.assertEqual(m.sink.entry.seq, 1)
+        end sub
+    end class
+end namespace

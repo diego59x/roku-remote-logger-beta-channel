@@ -121,7 +121,7 @@ All values are fixed once `RemoteLogger_init` has run. To log at another level, 
 
 ## Lifecycle
 
-- **Start.** `RemoteLogger_init` runs once on the render thread. Calling it again is a no-op.
+- **Start.** `RemoteLogger_init` runs once, on the render thread or in `main()` after `screen.show()`. Calling it again is a no-op.
 - **Suspend and resume.** On channels that support instant resume, the Task flushes on suspend when it can, and must not hold up resume. Nothing in the resume path may wait on the logger.
 - **Exit.** The last partial batch is sent on a best-effort basis. Entries still queued at exit are lost; a later milestone keeps a short tail of `error` entries for the next launch.
 - **Stop.** The Task watches a cancel field that it reads itself, so the host can stop it without interrupting it mid-request.
