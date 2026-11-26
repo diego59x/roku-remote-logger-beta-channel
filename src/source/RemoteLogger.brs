@@ -32,13 +32,16 @@ end function
 
 ' Starts the logger Task and stores it on m.global as "remoteLogger". Call it from the render
 ' thread, or from main() after screen.show(); before that the Task component cannot be created.
-' Does nothing when disabled or already started. Returns true when it started the Task.
+' Does nothing when disabled, already started, or when the Task cannot be created.
+' Returns true when it started the Task.
 function RemoteLogger_init(config as dynamic) as boolean
     config = RemoteLogger_normalizeConfig(config)
     if not config.enabled then return false
     if m.global.hasField("remoteLogger") then return false
 
     task = CreateObject("roSGNode", "RemoteLoggerTask")
+    ' invalid when the component is not in the package, or when called from main() before screen.show().
+    if task = invalid then return false
     task.config = config
     task.level = config.level
     m.global.addFields({ remoteLogger: task })
