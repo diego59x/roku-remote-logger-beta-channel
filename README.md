@@ -21,6 +21,8 @@ It exists for the builds where the debug console is out of reach: beta channels,
 
 ## Quick start
 
+One beta build serves every tester. Nothing about the logger is fixed in the build: each tester runs the server on their own machine and launches the channel with that machine's address and the level they want. Launched without an address, the logger stays off.
+
 1. Start the receiver on a machine the Roku can reach:
 
    ```bash
@@ -30,15 +32,24 @@ It exists for the builds where the debug console is out of reach: beta channels,
 
    Each session is written to its own file in `server/logs/`, one JSON entry per line: follow it with `tail -f server/logs/*.jsonl` and filter it with `jq`, for example `jq -c 'select(.lvl == "error")' server/logs/*.jsonl`.
 
-2. Initialise the library once, on the render thread, early in the scene's `init()`:
+2. Start the library once, with the values the tester chose at launch. The sample reads them from deep-link parameters: `main()` hands them to the scene after `screen.show()`, and the scene starts the library when they arrive:
 
    ```brightscript
-   RemoteLogger_init({
-       enabled: true
-       endpoint: "http://192.168.1.20:8085/v1/logs"
-       level: "info"
-   })
+   ' main(), after screen.show(). Beta builds only: a public build must ignore these parameters.
+   scene.launchArgs = { remoteLog: args.remoteLog, remoteLogLevel: args.remoteLogLevel }
+
+   ' The scene, observing launchArgs:
+   sub onLaunchArgs()
+       args = m.top.launchArgs
+       RemoteLogger_init({
+           enabled: args.remoteLog <> invalid
+           endpoint: args.remoteLog
+           level: args.remoteLogLevel          ' "info" when absent
+       })
+   end sub
    ```
+
+   A deep link is one source. A registry value or a remote flag works the same way: see [Integration: decide who gets it](docs/INTEGRATION.md#4-decide-who-gets-it).
 
 3. Log from any component or Task:
 
@@ -49,13 +60,15 @@ It exists for the builds where the debug console is out of reach: beta channels,
    end sub
    ```
 
-To try it with the sample channel, sideload `out/channel.zip` (see [Build](#build)) and launch it with a deep link that names the server's `/v1/logs` endpoint and the level:
+4. Each tester launches the channel with their own server's endpoint, URL-encoded, and a level. The device answers `404` to an unencoded URL:
 
-```bash
-curl -d '' 'http://<roku-ip>:8060/launch/dev?remoteLog=http://<laptop-ip>:8085/v1/logs&remoteLogLevel=debug'
-```
+   ```bash
+   curl -d '' 'http://<roku-ip>:8060/launch/<channel-id>?remoteLog=http%3A%2F%2F<laptop-ip>%3A8085%2Fv1%2Flogs&remoteLogLevel=debug'
+   ```
 
-The sample shows on screen whether remote logging is on, then logs from its scene every 5 seconds and from a Task.
+   To log at another level, relaunch with another value.
+
+To try it with the sample channel, sideload `out/channel.zip` (see [Build](#build)) and launch it as in step 4, with `dev` as the channel id. The sample shows on screen whether remote logging is on, then logs from its scene every 5 seconds and from a Task.
 
 If the host app already has a logger, do not add call sites. Write an adapter instead: see [Integration](docs/INTEGRATION.md).
 
