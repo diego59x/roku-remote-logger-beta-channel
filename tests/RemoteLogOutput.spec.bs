@@ -1,0 +1,72 @@
+namespace tests
+    @suite("Flow D output")
+    class RemoteLogOutputTests extends rooibos.BaseTestSuite
+        @describe("RemoteLogOutput")
+        @beforeEach
+        sub addSink()
+            m.sink = CreateObject("roSGNode", "Node")
+            m.sink.addField("level", "string", false)
+            m.sink.addField("entry", "assocarray", true)
+            m.sink.addField("ready", "boolean", false)
+            m.sink.level = "debug"
+            m.sink.ready = true
+            m.global.addFields({ remoteLogger: m.sink })
+            m.inner = {
+                calls: [],
+                init: sub(_level as integer, _noParams as dynamic)
+                    m.calls.push("init")
+                end sub,
+                setContext: sub(context as string)
+                    m.calls.push("setContext " + context)
+                end sub,
+                handleLog: sub(message as string, _level as integer, _context as string, _params as dynamic)
+                    m.calls.push("handleLog " + message)
+                end sub
+            }
+            m.host = FixedOutputLogger("Player")
+            m.host.setOutput(RemoteLogOutput(m.inner))
+        end sub
+
+        @afterEach
+        sub removeSink()
+            m.global.removeField("remoteLogger")
+            m.sink = invalid
+            m.host = invalid
+            m.inner = invalid
+        end sub
+
+        @it("forwards every call to the original output first")
+        sub forwardsToInner()
+            m.host.info("state changed", { state: "playing" })
+            m.assertEqual(m.inner.calls, ["init", "setContext Player", "handleLog state changed"])
+        end sub
+
+        @it("sends the entry with the context as tag and params as data")
+        sub sendsEntry()
+            m.host.info("state changed", { state: "playing" })
+            entry = m.sink.entry
+            m.assertEqual(entry.lvl, "info")
+            m.assertEqual(entry.tag, "Player")
+            m.assertEqual(entry.msg, "state changed")
+            m.assertEqual(entry.data, { state: "playing" })
+        end sub
+
+        @it("maps the host's numeric levels")
+        sub mapsLevels()
+            m.host.error("a")
+            m.assertEqual(m.sink.entry.lvl, "error")
+            m.host.warn("b")
+            m.assertEqual(m.sink.entry.lvl, "warn")
+            m.host.verbose("c")
+            m.assertEqual(m.sink.entry.lvl, "debug")
+        end sub
+
+        @it("sends no data when the host passes its no-params marker")
+        sub dropsMarker()
+            m.host.info("no params")
+            m.assertInvalid(m.sink.entry.data)
+            m.host.info("a string", "text")
+            m.assertEqual(m.sink.entry.data, "text")
+        end sub
+    end class
+end namespace

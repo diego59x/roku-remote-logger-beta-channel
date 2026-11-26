@@ -25,6 +25,10 @@ sub onLaunchArgs()
     m.hostLog = HostLogger("MainScene")
     m.hostLog.addHandler(RemoteLogHandler())
 
+    ' Flow D: the fixed-output logger gets the wrapper in place of its output; call sites stay as they are.
+    m.fixedLog = FixedOutputLogger("MainScene")
+    m.fixedLog.setOutput(RemoteLogOutput(ConsoleLogOutput()))
+
     ticker = m.top.findNode("ticker")
     ticker.observeField("fire", "onTick")
     ticker.control = "start"
@@ -38,5 +42,6 @@ sub onTick()
     m.log.debug("tick", { count: m.ticks })
     m.log.info("heartbeat", { count: m.ticks, "uptimeSec": m.ticks * 5 })
     m.hostLog.warning("host logger heartbeat", { count: m.ticks })
+    m.fixedLog.info("fixed-output heartbeat")
     if m.ticks = 3 then m.log.error("simulated failure on third tick", { count: m.ticks })
 end sub
