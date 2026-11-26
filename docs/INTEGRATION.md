@@ -130,21 +130,27 @@ If handlers are registered per logger instance, add the remote handler in the pl
 Some loggers call a single output object and offer no list. Build an output with the same methods that calls the original and then the facade:
 
 ```brightscript
-function RemoteLogOutput() as object
+function RemoteLogOutput(inner as object) as object
     return {
-        inner: ConsoleLogOutput()                       ' the host's existing output
+        inner: inner                                    ' the host's existing output
         remote: RemoteLogger("host")
         levels: ["", "error", "warn", "info", "debug"]  ' index = the host's numeric level
+        noParams: invalid
 
-        handleLog: function(message as string, level as integer, context as string, params as dynamic)
+        handleLog: sub(message as string, level as integer, context as string, params as dynamic)
             m.inner.handleLog(message, level, context, params)          ' print as before
+            if RemoteLogger_isString(params) and params = m.noParams then params = invalid
             m.remote.write(m.levels[level], context, message, params)   ' and send
-        end function
+        end sub
 
         ' Forward every other method the host logger calls on its output.
-        setContext: function(context as string)
+        init: sub(level as integer, noParams as dynamic)
+            m.noParams = noParams                       ' the host's "no params" marker
+            m.inner.init(level, noParams)
+        end sub
+        setContext: sub(context as string)
             m.inner.setContext(context)
-        end function
+        end sub
     }
 end function
 ```
@@ -152,10 +158,10 @@ end function
 Then give the logger the wrapper in place of the original, in the one place where the logger creates its output:
 
 ```brightscript
-m.setOutput(RemoteLogOutput())    ' was ConsoleLogOutput()
+m.setOutput(RemoteLogOutput(ConsoleLogOutput()))    ' was ConsoleLogOutput()
 ```
 
-The wrapper must copy the original's method names and signatures exactly, because the logger calls them without checking.
+The wrapper must copy the original's method names and signatures exactly, because the logger calls them without checking. The sample channel runs this recipe against a small fixed-output logger in [`sample/source/flows/`](../sample/source/flows/).
 
 If the logger builds its output internally and offers no way to replace it, that one line is a change to the host logger itself. This is the only flow that may need a change outside the adapter.
 

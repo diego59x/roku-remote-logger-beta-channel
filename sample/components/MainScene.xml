@@ -8,6 +8,8 @@
     <script type="text/brightscript" uri="pkg:/source/RemoteLogger.brs" />
     <script type="text/brightscript" uri="pkg:/source/flows/HostLogger.brs" />
     <script type="text/brightscript" uri="pkg:/source/flows/RemoteLogHandler.brs" />
+    <script type="text/brightscript" uri="pkg:/source/flows/FixedOutputLogger.brs" />
+    <script type="text/brightscript" uri="pkg:/source/flows/RemoteLogOutput.brs" />
     <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
     <children>
         <Group id="MainView">
