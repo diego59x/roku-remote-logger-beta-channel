@@ -31,17 +31,17 @@ If the channel lints third-party code, exclude the library's folder the same way
 
 ## 2. Initialise
 
-Call `RemoteLogger_init` once, as early as the scene's `init()`. It creates the Task node and stores it on `m.global`. It also works from `main()` once `screen.show()` has run, but not before: until then the Task component cannot be created.
+Call `RemoteLogger_init` once, as early as the values are known. It creates the Task node and stores it on `m.global`. It works on the render thread, and from `main()` once `screen.show()` has run, but not before: until then the Task component cannot be created.
+
+Do not fix the endpoint or the level in the build. One beta build serves every tester, and each one sends to their own server at the level they choose. Pass the values in from where the tester sets them (see [section 4](#4-decide-who-gets-it)):
 
 ```brightscript
-sub init()
-    RemoteLogger_init({
-        enabled: true
-        endpoint: "http://192.168.1.20:8085/v1/logs"
-        level: "debug"
-        sessionTags: { tester: "qa-01" }
-    })
-end sub
+' settings: read from a deep link, the registry or a remote flag
+RemoteLogger_init({
+    enabled: settings.endpoint <> invalid
+    endpoint: settings.endpoint            ' this tester's server
+    level: settings.level                  ' "info" when absent
+})
 ```
 
 A facade looks for the Task once, when it is built. A facade built before this call, or an adapter that holds one, stays silent for its whole life, even after the Task starts. Build loggers and adapters after `RemoteLogger_init`; if start-up logs matter, initialise before anything else in the scene.
