@@ -6,6 +6,7 @@
     "files": [
         "src/**/*.brs",
         "sample/**/*.brs",
+        "sample-sequence/**/*.brs",
         "tests/**/*.bs"
     ]
 }

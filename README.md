@@ -86,11 +86,12 @@ If the host app already has a logger, do not add call sites. Write an adapter in
 ```
 src/          the library (plain BrightScript)
 sample/       a channel that exercises the library on a device
+sample-sequence/ a separate channel that starts logging after a five-Right-key sequence and endpoint entry
 server/       log receiver
 docs/         these documents
 ```
 
-The production build combines `src/` and `sample/` into one sideloadable channel. Rooibos tests live in `tests/` and use a separate build configuration.
+The production build combines `src/` and `sample/` into one sideloadable channel. `sample-sequence/` is a second channel variant that asks the tester for an endpoint after a five-Right-key sequence. Rooibos tests live in `tests/` and use a separate build configuration.
 
 ## Build
 
@@ -102,6 +103,8 @@ npm run build
 ```
 
 The build compiles `src/` and `sample/` with BrighterScript (`bsc`) into one package and writes it to `out/channel.zip`. Sideload that zip through the device's developer installer (open `http://<device-ip>` in a browser with developer mode enabled).
+
+Build the sequence-gated channel separately with `npm run build:sequence`; it writes `out/sample-sequence.zip`. Enter the logger endpoint as a URL, for example `http://192.168.1.25:8085/v1/logs`.
 
 Lint and format (`bslint.json`, `bsfmt.json`):
 

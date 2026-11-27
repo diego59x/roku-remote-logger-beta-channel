@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<component name="MainSceneSequence" extends="Scene">
+    <script type="text/brightscript" uri="pkg:/source/utils.brs" />
+    <script type="text/brightscript" uri="pkg:/source/RemoteLogger.brs" />
+    <script type="text/brightscript" uri="pkg:/components/MainSceneSequence.brs" />
+    <script type="text/brightscript" uri="pkg:/sample-sequence/source/flows/HostLogger.brs" />
+    <script type="text/brightscript" uri="pkg:/source/flows/RemoteLogHandler.brs" />
+    <script type="text/brightscript" uri="pkg:/source/flows/FixedOutputLogger.brs" />
+    <script type="text/brightscript" uri="pkg:/source/flows/RemoteLogOutput.brs" />
+    <children>
+        <Group id="MainView">
+            <Label id="status" translation="[96, 96]" width="1728" wrap="true" text="Press RIGHT five times to configure RemoteLogger" />
+        </Group>
+        <Timer id="ticker" duration="5" repeat="true" />
+    </children>
+</component>

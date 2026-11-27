@@ -3,6 +3,7 @@
     "files": [
         { "src": "src/**/*", "dest": "" },
         { "src": "sample/**/*", "dest": "" },
+        { "src": "sample-sequence/**/*", "dest": "" },
         { "src": "tests/**/*.bs", "dest": "" }
     ],
     "rules": {
