@@ -4,7 +4,6 @@
     <interface>
         <field id="launchArgs" type="assocarray" onChange="onLaunchArgs" />
     </interface>
-    <script type="text/brightscript" uri="pkg:/source/utils.brs" />
     <script type="text/brightscript" uri="pkg:/source/RemoteLogger.brs" />
     <script type="text/brightscript" uri="pkg:/source/flows/AppLog.brs" />
     <script type="text/brightscript" uri="pkg:/source/flows/HostLogger.brs" />
