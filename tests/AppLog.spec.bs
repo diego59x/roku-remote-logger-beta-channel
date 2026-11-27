@@ -1,0 +1,63 @@
+namespace tests
+    @suite("Flow B wrapper")
+    class AppLogTests extends rooibos.BaseTestSuite
+        @describe("App_log")
+        @beforeEach
+        sub addSink()
+            m.sink = CreateObject("roSGNode", "Node")
+            m.sink.addField("level", "string", false)
+            m.sink.addField("entry", "assocarray", true)
+            m.sink.addField("ready", "boolean", false)
+            m.sink.level = "debug"
+            m.sink.ready = true
+            m.global.addFields({ remoteLogger: m.sink })
+            tests.resetAppLog()
+        end sub
+
+        @afterEach
+        sub removeSink()
+            m.global.removeField("remoteLogger")
+            m.sink = invalid
+            tests.resetAppLog()
+        end sub
+
+        @it("forwards the message and data as info, tagged app")
+        sub forwardsEntry()
+            App_log("row loaded", { rowId: 3 })
+            entry = m.sink.entry
+            m.assertEqual(entry.lvl, "info")
+            m.assertEqual(entry.tag, "app")
+            m.assertEqual(entry.msg, "row loaded")
+            m.assertEqual(entry.data, { rowId: 3 })
+        end sub
+
+        @it("sends no data when the call has none")
+        sub noData()
+            App_log("started")
+            m.assertEqual(m.sink.entry.msg, "started")
+            m.assertInvalid(m.sink.entry.data)
+        end sub
+
+        @it("reuses one facade across calls")
+        sub reusesFacade()
+            App_log("one")
+            App_log("two")
+            m.assertEqual(m.sink.entry.msg, "two")
+            m.assertEqual(m.sink.entry.seq, 2)
+        end sub
+
+        @it("stays silent when first called before the logger Task exists")
+        sub calledTooEarly()
+            m.global.removeField("remoteLogger")
+            App_log("lost")
+            m.global.addFields({ remoteLogger: m.sink })
+            App_log("also lost")
+            m.assertInvalid(m.sink.entry)
+        end sub
+    end class
+
+    ' App_log caches its facade on the component's m, not the suite's, so reset it from a plain function.
+    sub resetAppLog()
+        m.remoteLog = invalid
+    end sub
+end namespace

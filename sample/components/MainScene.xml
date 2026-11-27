@@ -6,6 +6,7 @@
     </interface>
     <script type="text/brightscript" uri="pkg:/source/utils.brs" />
     <script type="text/brightscript" uri="pkg:/source/RemoteLogger.brs" />
+    <script type="text/brightscript" uri="pkg:/source/flows/AppLog.brs" />
     <script type="text/brightscript" uri="pkg:/source/flows/HostLogger.brs" />
     <script type="text/brightscript" uri="pkg:/source/flows/RemoteLogHandler.brs" />
     <script type="text/brightscript" uri="pkg:/source/flows/FixedOutputLogger.brs" />
