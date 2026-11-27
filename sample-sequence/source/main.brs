@@ -1,4 +1,4 @@
-sub Main(args as dynamic)
+sub Main()
     screen = CreateObject("roSGScreen")
     port = CreateObject("roMessagePort")
     screen.setMessagePort(port)
