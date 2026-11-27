@@ -1,0 +1,9 @@
+{
+  "rootDir": ".",
+  "files": [
+    { "src": "src/**/*", "dest": "" },
+    { "src": "sample-sequence/**/*", "dest": "" }
+  ],
+  "createPackage": true,
+  "outFile": "out/sample-sequence.zip"
+}

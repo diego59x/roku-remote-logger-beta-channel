@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "build": "bsc",
+    "build:sequence": "bsc --project bsconfig-sequence.json",
     "lint": "bslint --lintConfig bslint.json",
     "test": "bsc --project bsconfig-test.json",
     "test:device": "rooibos --project bsconfig-test.json",
