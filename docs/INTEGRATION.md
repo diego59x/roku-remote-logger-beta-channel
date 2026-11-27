@@ -20,10 +20,9 @@ The library is a handful of plain `.brs` files and one Task component, with no d
 | `ropm` *(from M2)* | `ropm install roku-remote-logger`. Function and component names get the `ropm` prefix. |
 | Git submodule | Add this repository as a submodule and include `src/` in the build's file list. |
 
-Each component that logs must include the facade script and the helpers it calls in its XML:
+Each component that logs must include the facade script in its XML. It is one self-contained file:
 
 ```xml
-<script type="text/brightscript" uri="pkg:/source/utils.brs" />
 <script type="text/brightscript" uri="pkg:/source/RemoteLogger.brs" />
 ```
 
