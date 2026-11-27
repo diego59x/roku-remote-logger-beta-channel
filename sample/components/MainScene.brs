@@ -41,6 +41,7 @@ sub onTick()
     m.ticks = m.ticks + 1
     m.log.debug("tick", { count: m.ticks })
     m.log.info("heartbeat", { count: m.ticks, "uptimeSec": m.ticks * 5 })
+    App_log("wrapper heartbeat", { count: m.ticks }) ' Flow B: existing calls to the helper need no change.
     m.hostLog.warning("host logger heartbeat", { count: m.ticks })
     m.fixedLog.info("fixed-output heartbeat")
     if m.ticks = 3 then m.log.error("simulated failure on third tick", { count: m.ticks })

@@ -89,6 +89,8 @@ sub App_log(message as string, data = invalid as dynamic)
 end sub
 ```
 
+The facade is built on the helper's first call in each component. A component whose first call comes before `RemoteLogger_init` keeps a silent facade, so start the library before the first log. The sample channel runs this recipe in [`sample/source/flows/`](../sample/source/flows/).
+
 Check whether the wrapper is gated on a developer-build test such as `roAppInfo.isDev()`. Such a gate silences exactly the builds this library is for. Keep the gate on `print` and put the remote call outside it, as above.
 
 Two common variations:
